@@ -82,7 +82,24 @@ Where a resolved ticket shows a locked constraint to be wrong, it is proposed he
 than edited in — the constraints are the maintainer's. Approved amendments are folded
 into the list above and struck from this section.
 
-_None pending._ Constraints 8 and 15 were both amended on 2026-08-07, from findings in
+**Proposed 2026-08-07 — the Server bundle is not one output.** Raised by the maintainer
+after ticket 07. Replace the single Server bundle with **one root server entrypoint** —
+the Worker entrypoint Wrangler is configured with — **plus one server entrypoint per
+Route**, which the root imports lazily once the router has matched. Constraint 10 says
+"one self-contained ESM file per bundle"; that survives intact, and there are simply more
+bundles. What changes is `CONTEXT.md`'s definition of **Server bundle** as "the single
+output containing all code that runs on the server".
+
+Blocked on [ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md): whether
+workerd permits `import()` inside a `fetch` handler at all. **Not folded in until that
+research lands** — if it comes back negative the proposal is not implementable and the
+existing model stands. One sub-question rides along and is genuinely open: whether each
+per-Route server entrypoint is self-contained with duplicated shared code, or whether
+shared code is extracted into a common module — the latter contradicts constraint 10's
+"no shared extraction" but avoids ticket 02's silent two-copies-of-the-polyfill failure,
+now a server-side hazard rather than only a client one.
+
+Previously: constraints 8 and 15 were both amended on 2026-08-07, from findings in
 [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
 [capnweb](./issues/01-capnweb-transport-and-capability-model.md) and
 [ESM resolution](./issues/04-esm-resolution-and-export-conditions.md). Constraint 15
