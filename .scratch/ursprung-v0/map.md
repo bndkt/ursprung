@@ -115,6 +115,14 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   `assetsDirectory`), so the vision's deployment flow is expressible; the entrypoint is
   uploaded byte-for-byte and imports are not followed; `runWorkerFirst` is required or
   navigations never reach the Worker.
+- [The canonical demo app, written as if Ursprung v0 already existed](./issues/07-canonical-demo-app-prototype.md)
+  — the route file is a **nested object literal** carrying **lazy** `() => import(...)`
+  references, with **API methods declared in the route file** against arbitrarily-named
+  exports. Builder-call variants are ruled out: the bundler reads the route tree as data
+  and cannot evaluate it. Lazy references stop a Route bundle dragging in every route's
+  code, and the route file naming its callable exports **is the allowlist capnweb does
+  not have**. Nineteen ambiguities catalogued in
+  [`NOTES.md`](./prototypes/07-demo-app/NOTES.md); tickets 25 and 26 graduated from them.
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
@@ -138,8 +146,10 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
   a state from the other copy returns one correct value and then freezes forever. Either
   only one Route bundle is ever live per document, or the polyfill needs an explicit
   exemption from constraint 10's accepted duplication.
-- **Error handling.** Error boundaries, and what a thrown error looks like once the
-  response has already started streaming.
+- **Error boundaries.** The component-level construct: what one is, where it sits in the
+  tree, and what it renders. The _response_ half of this — status codes and mid-stream
+  throws — graduated to [ticket 26](./issues/26-errors-after-stream-start.md) once
+  [ticket 07](./issues/07-canonical-demo-app-prototype.md) made it concrete.
 - **Document head and metadata.** Title, meta tags, and which layer owns them.
 - **Forms and mutations.** Whether they route through RPC or through API routes.
 - **Build diagnostics.** Error message format, source positions, and how a build error

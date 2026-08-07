@@ -36,10 +36,19 @@ prototype exists to tee up:
 | Reading a deep tree         | good                           | poor                           |
 | Extra concepts              | none                           | ids, a second namespace        |
 
-The map's constraint is that agents are the first-class users and shapes should
-be trivial to generate and to diff, which points at **B**. Legibility points at
-**A**. This is the call to make in ticket 08 — the two files are there to be read
-side by side.
+A fourth shape came out of that comparison — **D**, flat with full paths and no
+ids, in `variants/d-flat-lazy/` — which keeps B's append-only diffability and
+drops the id namespace by inferring nesting from path prefixes.
+
+**Decided: A.** Prefix inference cannot express a **pathless layout** — a node
+that wraps children but adds no URL segment — and it cannot express a layout
+wrapping a path it does not prefix. Both are real needs, and in a nested literal
+a pathless layout falls out for free as a node with `children` and no `path`.
+That outweighed the diffability argument. The winning file is `routes.ts` at the
+prototype root; `variants/` keeps the three rejected shapes for the record.
+
+**Separately decided: lazy module references.** Orthogonal to the tree shape and
+arguably the bigger change — see #10 and #19 below.
 
 ### 8. API routes have no suffix of their own
 
@@ -52,9 +61,18 @@ the route file. That is defensible, but it means the suffix system encodes _side
 and the route file encodes _role_, and a reader has to hold both.
 
 Second, contested within that: **named exports per method** versus **a
-default-exported object**. Named exports diff better; an object is one literal,
-which is friendlier to a bundler with no scope model — and note that the same
-argument just killed variant C, so it deserves weighing rather than assuming.
+default-exported object** versus — the shape that won — **methods declared in
+the route file**, mapped to arbitrarily-named exports.
+
+**Decided: methods in the route file.** No uppercase-export convention has to
+exist, and `builds.server.ts` exports `readBuild`/`createBuild`/`removeBuild`,
+named for what they do. The decisive upside is not ergonomic: it makes the route
+file the application's **entire declared HTTP surface**, and naming the callable
+exports in one place *is* an allowlist — the thing capnweb does not provide
+(ticket 01) and ticket 20 has to invent. See #1.
+
+The cost is real and was accepted: reading `builds.server.ts` no longer tells you
+`removeBuild` is HTTP-reachable, and adding an endpoint is a two-file edit.
 
 ---
 
@@ -191,27 +209,56 @@ map's fog lists "Error handling" as too fuzzy to ticket; this instance is sharp.
 
 ## Build and packaging
 
-### 10. Does the config reach the routes by path or by import?
+### 10. Does the config reach the routes by path or by import? — mostly dissolved
 
 → **tickets 08, 12**
 
-A path string means the bundler _reads_ the route file and the graph has two
-roots. An import means one root — but then the Config file, a Server module,
-transitively imports every Client component in the app, and colouring has to
-understand that a route record's `component` is a **reference, not an
-inclusion**, or the Server bundle swallows everything. Written as a path string;
-the import form is the one that stresses ticket 12's invariant.
+Originally: a path string means the bundler _reads_ the route file and the graph
+has two roots; an import means one root, but then the Config file, a Server
+module, transitively imports every Client component in the app, and colouring has
+to understand that `component` is a **reference, not an inclusion**, or the
+Server bundle swallows everything.
+
+**The lazy-reference decision removes that force.** With `component: () =>
+import(...)` the route file has no eager edge to any component, so importing it
+from the Config file costs nothing. Either form now works; ticket 08 picks on
+taste. Written as a path string because the bundler reads the tree from the AST
+rather than evaluating it, and a string says so honestly.
+
+### 19. Lazy thunks describe a laziness the output does not have
+
+→ **tickets 08, 14**
+
+New, and a direct consequence of the decision. Constraint 10 forbids a runtime
+loader, so `() => import("./src/root.server.tsx")` is **never called as
+written** — the bundler rewrites each thunk at emit into a direct reference
+inside the bundle. The source is honest about build-time intent and misleading
+about runtime behaviour, and ticket 14 owns the rewrite.
+
+Two sharp sub-questions for ticket 08:
+
+- `.then((m) => m.readBuild)` is an AST shape the bundler must **pattern-match**
+  to learn the export name. Typed and navigable, but fragile — a developer who
+  writes it any other way gets a build error for no visible reason. A
+  `{ module, export }` pair would be robust and untyped.
+- Route **specificity**: `/builds/new` versus `/builds/:id` needs a rule. Source
+  order looks meaningful in a nested literal and must not be.
 
 ### 12. Are the config file and the route file exempt from constraint 9?
 
 → **ticket 08**
 
 Constraint 9: an unsuffixed `.ts`/`.tsx` reached by the graph is a build error.
-`ursprung.config.ts` is unsuffixed. The route file is written here as
-`routes.server.ts`, which is a guess. Is the Config file the root of the graph
-rather than "reached by" it, and therefore exempt? Is the route file server-side
-code, or build-time data that is neither? **Written down as unresolved; a
-one-line rule settles it.**
+`ursprung.config.ts` is unsuffixed, and the winning route file is written as
+`routes.ts`, also unsuffixed. Is the Config file the root of the graph rather
+than "reached by" it, and therefore exempt? Is the route file server-side code,
+or build-time data that is neither?
+
+**Narrowed by the lazy-reference decision, not answered.** The route file no
+longer imports any component, so the case for it being a Server module is much
+weaker — but the thunks are still code, so constraint 9 arguably still bites.
+The bundler never executes them. **A one-line rule settles it; ticket 08 owes
+that line.**
 
 ### 16. Namespace import of the API route
 

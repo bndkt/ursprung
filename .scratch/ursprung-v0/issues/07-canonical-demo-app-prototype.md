@@ -1,7 +1,7 @@
 # 07 — The canonical demo app, written as if Ursprung v0 already existed
 
 Type: prototype
-Status: claimed
+Status: resolved
 Blocked by: —
 Map: [Ursprung v0](../map.md)
 
@@ -50,3 +50,84 @@ Live at `.scratch/ursprung-v0/prototypes/07-demo-app/`, clearly marked throwaway
 
 Which variant won and why; the list of surfaced ambiguities and which ticket each one
 belongs to.
+
+## Answer
+
+Prototype: [`prototypes/07-demo-app/`](../prototypes/07-demo-app/). The surfaced
+ambiguities are [`NOTES.md`](../prototypes/07-demo-app/NOTES.md) — nineteen, each tagged
+with its destination ticket. That file, not the app, is this ticket's output.
+
+### The route file: variant A, carrying lazy references
+
+Four shapes were written. **Variant C (builder calls) was ruled out by the prototype
+itself, not by taste**: the bundler discovers the route tree by _reading_ the route file
+and cannot _evaluate_ it — evaluating means building first, and building is what needs
+the tree — while constraint 8 leaves no scope model to constant-fold with. The route tree
+must be readable as data from the AST, so a chain of function calls is not viable.
+
+Comparing A (nested literal) against B (flat records with ids) produced a fourth shape,
+**D** — flat, full paths, nesting inferred from path prefixes, no id namespace — which
+keeps B's append-only diffability and drops its dangling-`parent` risk.
+
+**A won.** Prefix inference cannot express a **pathless layout** — a node that wraps
+children but adds no URL segment — nor a layout wrapping a path it does not prefix. Both
+are real needs; in a nested literal a pathless layout is just a node with `children` and
+no `path`. That outweighed the diffability argument that favoured B and D.
+
+### Lazy module references, decided separately
+
+Orthogonal to the tree shape, and the more consequential of the two. Components and API
+handlers are referenced as `() => import("./src/root.server.tsx")` rather than imported
+at the top of the route file.
+
+The force: with eager imports, a Route bundle carrying the route table drags **every**
+route's component into **every** Route bundle. Constraint 10 accepts duplication across
+bundles; it does not accept every bundle being the whole application. The specifier stays
+a string literal in the AST, so nothing is evaluated and constraint 8 holds.
+
+Two consequences worth carrying forward. It **dissolves most of NOTES #10** — the Config
+file and route file no longer transitively import every Client module, so colouring is no
+longer stressed by the route file at all. And because constraint 10 forbids a runtime
+loader, **these thunks are never called as written**: ticket 14 rewrites each into a
+direct reference at emit, so the source describes a laziness the output does not have.
+
+### API routes: methods declared in the route file
+
+Not one of the two options offered — the maintainer proposed a third and it is better.
+Methods map to arbitrarily-named exports (`readBuild`, `createBuild`, `removeBuild`), so
+no uppercase-export convention exists.
+
+The decisive upside is not ergonomic. It makes the route file the application's **entire
+declared HTTP surface**, and naming the callable exports in one place _is_ an allowlist —
+precisely what capnweb does not provide (ticket 01, capabilities reachable by
+construction) and what **ticket 20 was going to have to invent**. Accepted cost: reading
+`builds.server.ts` no longer tells you `removeBuild` is HTTP-reachable, and adding an
+endpoint is a two-file edit.
+
+### Where the ambiguities landed
+
+- **Ticket 08** — #8 (API routes have no suffix of their own), #12 (are the Config and
+  route files exempt from constraint 9? narrowed, not answered), #19 (the
+  `.then((m) => m.export)` pattern-match, and route specificity), #10 (now taste).
+- **Ticket 09** — #5 (`props.children` vs `<Outlet />`), #6 (route param typing),
+  #13 (no keys, and no story for list updates), #14 (a signal as a JSX child).
+- **Tickets 19 / 17** — #2 (a Client component's body runs on the server and never in
+  the browser — the sharpest thing the prototype found), #3 (handlers are closures and
+  closures do not serialise), #15 (props crossing into a Client component must be
+  serialisable), #18 (payload placement relative to a stalled stream).
+- **Ticket 20** — #1 (nothing marks which server exports are callable; partly answered by
+  the route-file allowlist above), #17 (RPC arguments have no build-time check).
+- **Ticket 14** — #16 (namespace import), #19 (the emit-time thunk rewrite).
+- **Ticket 21** — #11 (three config files, and a compatibility date in two of them).
+
+### Two tickets graduated
+
+- **[25 — How bindings reach server code](./25-bindings-and-per-request-context.md)**,
+  from #4. Three files needed `env` and all three faked it with `declare const env`.
+  Bindings arrive per-request on the `fetch` handler and are never module scope, so this
+  blocks writing any real server code — and it fitted no existing ticket. Blocks 09
+  and 20.
+- **[26 — Errors and status codes after the stream has started](./26-errors-after-stream-start.md)**,
+  from #7, graduated out of the map's "Error handling" fog. `BuildDetail` cannot set a
+  404: its parent's markup has already flushed. In-order streaming (constraint 12) makes
+  this structural. Error _boundaries_ stay in the fog; this instance was sharp.

@@ -2,7 +2,7 @@
 
 Type: grilling
 Status: open
-Blocked by: 01, 12
+Blocked by: 01, 12, 25
 Map: [Ursprung v0](../map.md)
 
 ## Question

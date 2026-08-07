@@ -23,10 +23,12 @@ reason to appear in it, not because it is interesting.
 
 ```
 ursprung.config.ts             the Config file — single entry point
+routes.ts                      ★ the route file — the shape that won
 variants/
-  a-nested-literal/routes.server.ts   route file, variant A
-  b-record-array/routes.server.ts     route file, variant B
-  c-builder/routes.server.ts          route file, variant C
+  a-nested-literal/routes.server.ts   variant A — nested literal, eager imports
+  b-record-array/routes.server.ts     variant B — flat records with ids
+  c-builder/routes.server.ts          variant C — builder calls (ruled out)
+  d-flat-lazy/routes.ts               variant D — flat, full paths, lazy refs
 src/
   root.server.tsx              root route, Server component, nav + child slot
   format.shared.ts             Shared module — reached from both sides
@@ -48,10 +50,14 @@ signal-driven interaction ✓, Shared module ✓, Client component importing fro
 
 ## How to read it
 
-Start with the three route files side by side — that is the contested shape, and
-`NOTES.md #9` is the finding that narrows it from three to two. Then
-`watch-toggle.client.tsx`, where the Server boundary, the signals and Resumption
-all land in one file. Then `NOTES.md` end to end.
+Start with `routes.ts` — the shape that won: a nested object literal carrying
+lazy module references, with API methods declared in the route file. The four
+files under `variants/` are the alternatives it beat, each ending in an honest
+account of what it cost.
 
-Inline `AMBIGUITY (see NOTES.md #n)` and `VARIANT` comments mark every place the
-sketch is guessing. There are eighteen.
+Then `watch-toggle.client.tsx`, where the Server boundary, the signals and
+Resumption all land in one file. Then `NOTES.md` end to end.
+
+Inline `AMBIGUITY (see NOTES.md #n)` comments mark every place the sketch is
+guessing. There are nineteen notes; three are now decided and the rest are the
+agenda for tickets 08, 09, 19, 20 and 25.

@@ -6,23 +6,18 @@
 import { defineConfig } from "ursprung";
 
 export default defineConfig({
-  // VARIANT — how the config reaches the routes. See NOTES.md #10.
+  // Largely settled by ticket 07's decision. Because the route file references
+  // components through lazy thunks rather than top-level imports, importing it
+  // here no longer drags every Client component into the Config file's graph —
+  // which was the whole force behind NOTES.md #10:
   //
-  //   (i)  a path string, below. The bundler *reads* the route file rather than
-  //        importing it; the config module has no edge to any component, and the
-  //        graph has two roots (config, route file) instead of one.
+  //     import routes from "./routes.ts";
+  //     export default defineConfig({ routes });
   //
-  //   (ii) an import:
-  //
-  //          import routes from "./routes.server.ts";
-  //          export default defineConfig({ routes });
-  //
-  //        which is one real root and one real graph — but then the Config file
-  //        transitively imports every Client component in the application, and
-  //        the Config file is a Server module. Colouring has to know that a route
-  //        record's `component` is a *reference*, not an inclusion, or every
-  //        Client component lands in the Server bundle and nothing else.
-  routes: "./routes.server.ts",
+  // Written as a path string anyway, because the bundler reads the route tree
+  // out of the AST rather than evaluating it, and a string says so honestly. The
+  // import form now costs nothing though, and ticket 08 can pick either.
+  routes: "./routes.ts",
 
   // Everything reachable from the route tree is first-party; this is where the
   // VFS root sits so that resolution has somewhere to start.
