@@ -247,11 +247,18 @@ own package. A tool reads exactly one config per directory, so do not add an
 `.oxlintrc.json` or `.oxfmtrc.json` beside these — the JSON and TS forms cannot
 coexist, and adding one silently changes which config wins.
 
-`oxfmt` ignores two paths via `ignorePatterns`, both for the same reason — a tool
-rewrites them wholesale, so formatting produces a diff that the next regeneration
-throws away. `.agents/skills/**` is vendored content synced from
-`skills-lock.json` by `bun run skills:update`; `**/worker-configuration.d.ts` is
-emitted by `wrangler dev`. It otherwise honours `.gitignore`.
+`oxfmt` ignores three paths via `ignorePatterns`, all for the same reason — something
+other than a human writes them, so formatting produces a diff that the next write
+throws away. `.agents/skills/**` is vendored content synced from `skills-lock.json`
+by `bun run skills:update`; `**/worker-configuration.d.ts` is emitted by
+`wrangler dev`; `.scratch/**` is the agent issue tracker, whose maps, tickets and
+research notes are appended to mechanically and are neither rendered nor parsed. It
+otherwise honours `.gitignore`.
+
+Formatting markdown is otherwise on, and worth one warning: oxfmt reformats fenced
+code blocks inside prose. A `ts` block written as four lines can come back as
+thirteen, so a post that says "line 4" or "it takes four lines" will be wrong by the
+time it lands. Refer to code by what it contains, never by position or count.
 
 These are npm packages whose bins carry a `#!/usr/bin/env node` shebang, but
 `bun run` substitutes itself for `node`, so the Bun-only toolchain still holds —

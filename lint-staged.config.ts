@@ -5,7 +5,8 @@ const SOURCE = "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}";
 
 // `--no-error-on-unmatched-pattern` keeps oxfmt from exiting non-zero when every
 // path handed to it is covered by `ignorePatterns` — otherwise a commit touching
-// only `.agents/skills/**` would fail the hook.
+// only `.scratch/**` or `.agents/skills/**` would fail the hook. Wayfinder sessions
+// commit nothing but `.scratch/**` routinely, so this is load-bearing, not defensive.
 const format = "oxfmt --no-error-on-unmatched-pattern";
 
 export default {
