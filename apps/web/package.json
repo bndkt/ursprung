@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "deploy": "wrangler deploy --experimental-new-config",
-    "deploy:preview": "WRANGLER_CI_GENERATE_PREVIEW_ALIAS=true wrangler versions upload --experimental-new-config",
-    "dev": "wrangler dev --experimental-new-config",
+    "build:css": "tailwindcss --input ./src/styles.css --output ./public/styles.css --minify",
+    "deploy": "bun run build:css && wrangler deploy --experimental-new-config",
+    "deploy:preview": "bun run build:css && WRANGLER_CI_GENERATE_PREVIEW_ALIAS=true wrangler versions upload --experimental-new-config",
+    "dev": "bun run build:css && wrangler dev --experimental-new-config",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
@@ -15,6 +16,8 @@
   },
   "devDependencies": {
     "@cloudflare/config": "^0.4.0",
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3",
     "wrangler": "^4.119.0"
   }
 }

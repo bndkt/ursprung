@@ -8,6 +8,13 @@ export default defineWorker({
   compatibilityDate: "2026-08-07",
   compatibilityFlags: ["nodejs_compat"],
   entrypoint: "./src/index.ts",
+  // Static assets are served straight from `public/` without invoking the
+  // Worker; the directory itself is named in `wrangler.config.ts`. Only the
+  // runtime fields are configurable here.
+  assets: {
+    // `/posts` and `/posts/` both resolve to `public/posts/index.html`.
+    htmlHandling: "auto-trailing-slash",
+  },
   // Custom domain. The zone must already exist on the Cloudflare account —
   // Wrangler creates the domain record on deploy, it does not create the zone.
   domains: ["ursprung.dev"],
