@@ -85,6 +85,7 @@ Cloudflare's Git integration, not from a developer machine. It builds on push to
 | Build command                        | _(empty — no build step)_ |
 | Deploy command                       | `bun run deploy`          |
 | Non-production branch deploy command | `bun run deploy:preview`  |
+| Non-production branch builds         | enabled (all branches)    |
 | `BUN_VERSION`                        | `1.3.11` (build variable) |
 
 Both deploy commands are `apps/web` package scripts rather than inline
@@ -95,21 +96,72 @@ runs `wrangler versions upload`, which uploads a version and hands back a
 preview URL without shifting production traffic. Changing either script changes
 what CI does; the dashboard fields should not need editing again.
 
+Non-production branch builds are what make every branch — and so every pull
+request — build at all. With them off, only `main` ever produces a version and
+`deploy:preview` never runs.
+
 The root directory has to be `apps/web` rather than the repo root, because
 Wrangler's bin is linked into `apps/web/node_modules/.bin` (Bun links workspace
 member bins there, not at the root) and the scripts resolve it from there.
 Running `bun install` from `apps/web` is still correct — Bun walks up to the
 workspace root, so `ursprung` resolves through the `workspace:*` link.
 
-Two Worker-level settings in `cloudflare.config.ts` back this:
+Three Worker-level settings in `cloudflare.config.ts` back this:
 
 - `domains: ["ursprung.dev"]` becomes a `custom_domain` route. Wrangler creates
   the domain record on deploy but **not** the zone — `ursprung.dev` must already
   be an active zone on the account or the deploy fails.
+- `workersDev: false` / `previewUrls: true` — see below.
 - `observability` turns on Workers Logs and Traces. `enabled: true` alone only
   covers logs; tracing is separately opt-in via `traces.enabled`, and stays that
   way until Cloudflare ships automatic tracing behind a future compatibility
   date. Both sample at `1` (100%) — worth lowering if traffic ever justifies it.
+
+### Preview URLs
+
+Every version of the Worker is reachable at a
+[preview URL](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/)
+on `workers.dev`, in two flavours:
+
+- **Per commit** — `<version-prefix>-ursprung-web.<subdomain>.workers.dev`,
+  minted for every version, whether it came from `wrangler deploy` (a `main`
+  build) or `wrangler versions upload` (a branch build).
+- **Per branch** — `<branch>-ursprung-web.<subdomain>.workers.dev`, a stable
+  alias that follows the head of the branch, so a link posted on a pull request
+  keeps working as commits land on it.
+
+Three things have to line up, and they are easy to get wrong independently:
+
+- `previewUrls: true` in `cloudflare.config.ts`. This is not the default: when
+  the field is absent Cloudflare mirrors the `workers.dev` setting, and
+  `workersDev` itself defaults to `false` as soon as a route or custom domain
+  exists — which `domains: ["ursprung.dev"]` does. So the config that serves
+  production from a custom domain silently turns preview URLs off unless they
+  are asked for by name. `workersDev: false` is spelled out for the same
+  reason: keeping production on `ursprung.dev` only, while previews still get
+  their `workers.dev` hostnames.
+- Only `wrangler deploy` writes that setting — `wrangler versions upload` just
+  reads it to decide whether to print the preview URL. Flipping `previewUrls`
+  therefore takes effect on the next **production** build, not on the branch
+  build that changes the line.
+- `WRANGLER_CI_GENERATE_PREVIEW_ALIAS=true` in `deploy:preview` is what creates
+  the branch alias. Wrangler derives it from `WORKERS_CI_BRANCH` (falling back
+  to `git rev-parse --abbrev-ref HEAD` locally), lowercases it, replaces every
+  character outside `[a-z0-9-]` with a dash, and — if `<alias>-ursprung-web`
+  would exceed the 63-character DNS label limit — truncates and appends a hash
+  of the branch name. Workers Builds sets this variable itself, but the flag
+  defaults to `false` in Wrangler, so setting it in the script keeps branch
+  aliases working if the build ever runs somewhere else.
+
+Cloudflare's GitHub integration posts both URLs as a pull request comment, one
+comment per build. That is a property of `versions upload` runs, which is why
+the non-production deploy command must stay `versions upload` and not `deploy`.
+
+Two limits worth knowing: preview URLs are public — anyone with the link can
+reach that version, and locking them down means putting
+[Cloudflare Access](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/#manage-access-to-preview-urls)
+in front — and Workers Builds does not build pull requests from forks, so a
+fork PR gets no preview URL until its branch is pushed to this repository.
 
 ### The package ships TypeScript source, not a build artifact
 

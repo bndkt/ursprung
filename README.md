@@ -4,13 +4,34 @@ Bun workspace monorepo:
 
 - [`packages/ursprung`](packages/ursprung) — the `ursprung` package, published to
   [npm](https://www.npmjs.com/package/ursprung).
-- `apps/web` — a `Bun.serve` HTTP server that imports it. Not published.
+- `apps/web` — a Cloudflare Worker that imports it, served at
+  [ursprung.dev](https://ursprung.dev). Not published.
 
 ```bash
 bun install
-bun run dev        # ursprung-web on :3000
+bun run dev        # ursprung-web in `wrangler dev` on :8787
 bun test
 ```
+
+## Preview URLs
+
+Every push builds through
+[Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) and
+every build produces a
+[preview URL](https://developers.cloudflare.com/workers/versions-and-deployments/preview-urls/):
+
+- a per-commit URL, `<version-prefix>-ursprung-web.<subdomain>.workers.dev`, for
+  the exact version that was built;
+- a per-branch URL, `<branch>-ursprung-web.<subdomain>.workers.dev`, that always
+  points at the head of that branch.
+
+Pushes to `main` run `wrangler deploy`, which ships to `ursprung.dev` and still
+mints a per-commit URL. Pushes to any other branch run `wrangler versions
+upload`, which uploads a version without shifting production traffic; Cloudflare
+posts both URLs as a comment on the pull request.
+
+Preview URLs are public. Pull requests from forks are not built, so they get no
+preview URL until the branch is pushed to this repository.
 
 ## Releasing `ursprung`
 
