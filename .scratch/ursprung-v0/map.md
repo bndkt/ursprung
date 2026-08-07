@@ -190,6 +190,47 @@ reused.
 Recorded as [ADR-0005](../../docs/adr/0005-the-host-evaluates-the-config-before-the-build.md),
 which stands whether or not this is folded into the constraint list.
 
+**Proposed 2026-08-07 — constraint 6 gains a fourth dependency, and its opening clause is
+stale.** Raised by ticket 11, and already exercised rather than merely proposed: the
+maintainer approved `typescript` as a **test-only dev dependency** in that session, which is
+constraint 6's own stated mechanism ("every additional dependency needs the maintainer's
+explicit approval") working as designed. It buys the one oracle the other three cover worst —
+a differential against `tsc` on the **erasure decision set**, which byte ranges actually are
+type syntax, plus corpus cases generated from the `SyntaxKind` table research §3's 19 + 38
+entries were enumerated against.
+
+Nothing about the constraint's intent changes; only its arithmetic. Proposed wording for the
+first sentence:
+
+> ursprung's runtime dependencies are exactly two — the TC39 Signals polyfill and capnweb.
+> Its dev dependencies are Wrangler and `typescript`, the latter test-only and never
+> imported from `packages/ursprung/src`, so the published package carries neither.
+
+The distinction is worth spelling out because it is what keeps the approval cheap: a
+test-only dev dependency cannot reach a consumer, so the "three dependencies" promise that
+matters — what someone installing `ursprung` gets — is unchanged.
+
+**Proposed 2026-08-07 — source maps should be reconsidered, because the reason they were
+ruled out was never true.** Raised by ticket 11. Out of scope lists them beside minification
+and identifier renaming, all three "needing the scope model constraint 8 rules out".
+Minification and renaming do. **Source maps never did** — they need position tracking
+through the emitter, which is a mapping recorded per printed node.
+
+Two things changed at once, and the combination is what makes this worth your attention:
+
+- **Printing broke output positions.** Ticket 06 established that whitespace-preserving
+  blanking is exact and concluded source maps were therefore unnecessary. Ticket 11 chose a
+  printer instead, and verbatim spans do not rescue this: a verbatim subtree keeps its bytes,
+  not its offset, so one printed statement earlier in the file shifts everything after it.
+- **So a production stack trace from workerd can no longer be mapped back to a module.**
+  Build diagnostics are fine and always were — they are computed against the original module
+  text. This is purely about runtime errors in deployed code.
+
+Deliberately **not** ruled either way here, because scope is the maintainer's. Three readings
+are all defensible: accept unmappable production traces in v0; emit source maps for the
+server output only, where the trace actually arrives; or reverse ticket 11's printer decision
+in favour of the edit list, which is the option that gets more expensive the longer it waits.
+
 Previously: constraints 8 and 15 were both amended on 2026-08-07, from findings in
 [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
 [capnweb](./issues/01-capnweb-transport-and-capability-model.md) and
@@ -269,6 +310,18 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   violations. **Output is byte-identical independent of host**, bought by sorting the
   enumeration at handover; no cancellation signal and no budget in v0. Recorded as
   [ADR-0006](../../docs/adr/0006-the-virtual-filesystem-is-a-synchronous-snapshot.md).
+- [The parser: accepted subset, AST shape, and error reporting](./issues/11-parser-subset-ast-and-errors.md)
+  — a **full ECMAScript parser** (the partial-parser provocation dies on four independent
+  ambiguities), and output is **printed from the AST with verbatim spans for pure-JavaScript
+  subtrees** rather than blanked in place. That printer **dissolves four of research §5's six
+  hazards** and leaves ursprung strictly more correct than `ts-blank-space` and `amaro`, so
+  the reject list **shrinks to ten** rather than growing. Grammar is a pinned edition with no
+  target-support policy; the parser is a **conservative acceptor**, not a JavaScript
+  validator. JSX parses to nodes with the **full HTML entity table**; the call shape stays
+  ticket 15's. `Diagnostic` shape fixed, with a **required `remedy`** field. Four oracles —
+  `typescript` approved as a test-only dev dependency. **Cost: printing breaks output
+  positions**, so ticket 06's "source maps come free" is half void. Recorded as
+  [ADR-0007](../../docs/adr/0007-the-emitter-prints-from-the-ast.md).
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
@@ -304,11 +357,6 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
   [ticket 08](./issues/08-route-and-config-authoring-api.md), which lets one route carry
   both page fields and an `api` map: the choice is now RPC versus the page's own
   `api.POST` at its own URL, rather than RPC versus a separate API route somewhere else.
-- **Build diagnostics.** Narrowed by [ticket 10](./issues/10-build-entry-point-and-vfs.md):
-  diagnostics are **returned as an array** on a discriminated result, collected across the
-  phase that failed, and distinct from a `throw`, which now means ursprung itself is broken.
-  What remains is the `Diagnostic` shape — message format, source positions, and how a build
-  error survives having no scope model to point at.
 - **Package layout.** The exact subpath export surface of the published `ursprung`
   package, once the runtimes are known.
 - **Static assets.** The demo app needs _something_ for files that aren't TypeScript,
@@ -326,8 +374,12 @@ Ruled beyond this destination. Never graduates; returns only as a fresh effort.
   platform work is a separate effort.
 - **CJS support for npm dependencies.** ESM-only in v0.
 - **Dev server, HMR, watch mode.**
-- **Minification, identifier renaming, and source maps** — all need the scope model
-  constraint 8 rules out.
+- **Minification and identifier renaming** — both need the scope model constraint 8 rules
+  out. **Source maps were on this line for the same reason, and that reason was wrong** —
+  they need position tracking through the emitter, not a scope model, and
+  [ticket 11](./issues/11-parser-subset-ast-and-errors.md) made them the only way to map a
+  production stack trace. Still out of scope; see Pending amendments for the proposal to
+  revisit.
 - **Stylesheets and a general asset pipeline.** Explicitly out per the vision.
 - **The build-in-a-Worker product** — an agent driving a dynamic Worker, writing to R2,
   serving from a dispatch namespace. The constraint is in scope; the product is not.
