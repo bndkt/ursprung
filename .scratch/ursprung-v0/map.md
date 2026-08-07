@@ -67,11 +67,46 @@ and reopening one is a scope change, not a ticket.
 16. Third-party modules are **uncoloured** — their side is inferred from reachability.
     First-party modules must declare. We control our source; we don't control npm's.
 
+## Pending amendments
+
+Proposed changes to the locked constraints, surfaced by resolved tickets. **Not yet
+approved by the maintainer** — do not treat as settled.
+
+- **Constraint 15 is too narrow.** It names only `node:*` as external on the server, but
+  capnweb's Workers build imports `cloudflare:workers`. Proposed: externalise
+  `cloudflare:*` as well as `node:*` on the server, and keep both a hard error on the
+  client. Surfaced by [capnweb](./issues/01-capnweb-transport-and-capability-model.md).
+- **Constraint 8 is phrased as if `erasableSyntaxOnly` defines our accepted subset.**
+  It does not — that flag permits decorators and `accessor`, which are `SyntaxError`s on
+  workerd. Proposed: Ursprung's reject list is explicitly its own, strictly larger.
+  Surfaced by [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md).
+
 ## Decisions so far
 
 <!-- one line per closed ticket: gist + link -->
 
-_None yet — charted, not yet worked._
+- [capnweb: transport, capability model, and what it demands of a bundler](./issues/01-capnweb-transport-and-capability-model.md)
+  — 0.10.0, MIT, zero deps, ESM; **capabilities are reachable by construction with no
+  allowlist**, so ticket 20's generated root object _is_ the security perimeter; runtime
+  validation is unreachable given constraints 6 and 8; highly experimental, pin exactly.
+- [TC39 Signals and signal-polyfill](./issues/02-tc39-signals-and-polyfill.md) — graph
+  construction order is free (what Resumability needs) but a computed first evaluated
+  reading nothing freezes forever, silently; use an indirection cell. Proposal is stale
+  at Stage 1; polyfill says not for production and **has no `exports` field**.
+- [Resumability prior art](./issues/03-resumability-prior-art.md) — Qwik's format read
+  from source plus a captured production payload; **payload measured at 15.5% of HTML
+  bytes**; state is a whole-document post-pass in both v1 and v2, which is strong
+  evidence _for_ constraint 12; v1's HTML-comment encoding shipped an XSS CVE.
+- [Wrangler's experimental TypeScript config](./issues/05-wrangler-experimental-config-and-build-contract.md)
+  — **`noBundle` exists** (on `wrangler.config.ts`, with `build.command` and
+  `assetsDirectory`), so the vision's deployment flow is expressible; the entrypoint is
+  uploaded byte-for-byte and imports are not followed; `runWorkerFirst` is required or
+  navigations never reach the Worker.
+- [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
+  list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
+  not sufficient**; delete list is 19 statement forms and 38 fragment positions;
+  whitespace-blanking is exact, so no source maps needed; no import elision without a
+  type model.
 
 ## Not yet specified
 
@@ -83,7 +118,13 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
 - **Runtime routing and dispatch.** Matching, params, 404s, redirects, trailing slashes.
   Falls out of the route authoring API once that's settled.
 - **Client-side navigation.** Whether v0 has it at all, or whether every link is a full
-  document load. Cheaper to answer once streaming and resumability are pinned.
+  document load. Cheaper to answer once streaming and resumability are pinned. Now also
+  carries a trap found by [ticket 02](./issues/02-tc39-signals-and-polyfill.md): two
+  Route bundles live in one document means two copies of the signal polyfill, hence two
+  disjoint reactive graphs, and the cross-copy failure is **silent** — a computed reading
+  a state from the other copy returns one correct value and then freezes forever. Either
+  only one Route bundle is ever live per document, or the polyfill needs an explicit
+  exemption from constraint 10's accepted duplication.
 - **Error handling.** Error boundaries, and what a thrown error looks like once the
   response has already started streaming.
 - **Document head and metadata.** Title, meta tags, and which layer owns them.
@@ -92,7 +133,7 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
   survives having no scope model to point at.
 - **Package layout.** The exact subpath export surface of the published `ursprung`
   package, once the runtimes are known.
-- **Static assets.** The demo app needs *something* for files that aren't TypeScript,
+- **Static assets.** The demo app needs _something_ for files that aren't TypeScript,
   even with no stylesheet pipeline.
 
 ## Out of scope

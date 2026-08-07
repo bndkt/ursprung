@@ -47,3 +47,26 @@ Decide:
 - **What the client bundle must not contain.** The stub must carry no trace of the server
   function's body, its imports, or its closed-over values. Name the check that proves it
   (see ticket 12's enforcement question).
+
+## Established by ticket 01 — read before starting
+
+[capnweb research](../research/01-capnweb.md) answers this ticket's security question in
+the harshest available way: **capabilities are reachable by construction, with no
+allowlist.** Every prototype method and getter on the root `RpcTarget` is callable by
+anyone who can reach the endpoint; only `#private` fields and own instance properties are
+hidden, and TypeScript's `private` hides nothing at runtime. The root object this
+transform generates _is_ the security perimeter — there is no second line of defence.
+
+Also settled, and constraining:
+
+- **No runtime argument validation is available.** `capnweb-validate` needs a decorator
+  (non-erasable), the TypeScript checker (no type model), and a second dependency — three
+  locked constraints rule it out. If v0 validates RPC arguments at all, we write it.
+- **Serialisation is narrower than advertised**: `Map`, `Set`, `RegExp`, `URL`,
+  `ArrayBuffer`, every typed array except `Uint8Array`, null-prototype objects, class
+  instances and cycles all throw at the sender in 0.10.0. With no type model these are
+  runtime failures we cannot catch at build time — which sharpens this ticket's question
+  about whether the signature constraint is checkable.
+- **HTTP batch is one-shot and one-directional**; bidirectional needs WebSocket.
+- Pin capnweb to an **exact version** — 0.x, wire format already broken once in 0.9.0,
+  undocumented outside its README, Cloudflare's own word is "highly experimental".

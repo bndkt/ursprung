@@ -2,7 +2,7 @@
 
 Type: grilling
 Status: open
-Blocked by: 05, 14
+Blocked by: 14, 23
 Map: [Ursprung v0](../map.md)
 
 ## Question
@@ -35,10 +35,29 @@ Decide:
   the config is an input. But it also has to agree with our output layout on several
   fields. Decide whether that agreement is enforced (we read and validate the config) or
   merely documented, and note that constraint 13 means we cannot assume a real filesystem.
-- **What happens if ticket 05 finds that disabling bundling is not expressible** in the
-  experimental TypeScript config. Name the fallback now rather than discovering it later:
-  the stable JSON config, a Wrangler version pin, or an upstream request. This is the
-  ticket's main risk.
-- **The deploy-time validation loop.** What is the cheapest command that proves the
-  contract holds without shipping, and does it belong in this repo's CI?
+- **Whether to adopt Cloudflare's own build-output contract.** Ticket 05 found that
+  `wrangler build --x-cf-build-output` emits `.cloudflare/output/v0/` — a `mainModule`
+  plus a flat `modules` map and an `assets/` tree, which is Cloudflare's existing
+  framework→Wrangler interface and close to what constraint 10 already produces.
+  Adopting it means interoperating with a moving experimental target; inventing our own
+  means diverging from the platform. Decide deliberately.
+- **The deploy-time validation loop.** Ticket 05 found `--dry-run` under `noBundle`
+  validates almost nothing — only that the single entrypoint parses. So what _does_
+  prove the contract holds without shipping, and does it belong in this repo's CI?
+
+## Established by ticket 05 — treat as input, not open
+
+- `noBundle` is expressible: it lives on `WranglerConfig` in the sibling
+  `wrangler.config.ts`, alongside `build: { command, cwd, watchDir }` and
+  `assetsDirectory`. **The ticket's original main risk did not materialise.**
+- Under `noBundle` the entrypoint is uploaded byte-for-byte and imports are **not**
+  followed. Ursprung must emit fully type-stripped, import-resolved JavaScript, and the
+  one-file-per-bundle rule is what makes this safe — there is no default module rule for
+  `.js`, so sibling files would be silently dropped.
+- Asset settings straddle both config files, and **`runWorkerFirst` is required** or
+  browser navigations are answered by `not_found_handling` and never reach the Worker,
+  which would silently break streaming SSR.
+- The build command runs before entrypoint resolution, with cwd = `process.cwd()`, which
+  is where both config files must live. Whether that holds under Workers Builds is
+  ticket 23, which now blocks this one.
 - **Caching headers and immutability** for client bundles, if we control them.

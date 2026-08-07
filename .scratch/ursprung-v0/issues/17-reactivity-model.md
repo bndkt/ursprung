@@ -32,7 +32,7 @@ Decide:
   more explicit; a runtime answer is simpler. Same question for attributes.
 - **Reading a signal on the server.** During SSR a signal is read once and rendered.
   Does the server track subscriptions while doing so — because if the client is to resume
-  without re-rendering, *something* must record which signal fed which DOM position, and
+  without re-rendering, _something_ must record which signal fed which DOM position, and
   the server is the only place that knows. Decide whether that recording happens here or
   in ticket 19, but make sure exactly one of them owns it.
 - **Batching and glitch-freedom.** What happens when several signals change in one turn,
@@ -41,3 +41,23 @@ Decide:
   in async components (ticket 09)? Adding both is a duplication worth avoiding.
 - **What we refuse.** Stores, reducers, context, deep proxies, two-way binding — name
   what is not in v0 so the spec settles it in advance.
+
+## Established by ticket 02 — read before starting
+
+From [the signals research](../research/02-signals.md):
+
+- **Never declare a `Watcher` at module scope.** Every effect recipe in the primary
+  sources does exactly that, and module scope is per-isolate on Workers. Server rendering
+  itself is safe — computed callbacks are synchronous, so tracking cannot leak across an
+  `await`.
+- **A computed first evaluated while reading no signals records zero sources and is a
+  frozen constant forever**, silently. The indirection-cell pattern (a `Signal.State`
+  holding the current producer, wrapped in a stable `Signal.Computed`) is the verified
+  escape and preserves identity across the moment a client module's code arrives.
+- **Ursprung must own signal identity** — no `toJSON`, no ids, and `introspectSinks`
+  reports only _watched_ consumers. Subclassing with private fields is the cheap place to
+  hang a node id. Coordinate with ticket 19 on which of the two owns the recording.
+- The proposal is **stale at Stage 1** and the polyfill's own README says not to use it in
+  production. Worth deciding how much of it we wrap versus expose.
+- **Loose end:** proposal issue #116 "Integration Stories" could not be read this session
+  and should be, before this ticket locks the API.

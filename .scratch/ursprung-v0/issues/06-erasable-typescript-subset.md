@@ -1,7 +1,7 @@
 # 06 — The erasable TypeScript subset: exactly what survives type stripping
 
 Type: research
-Status: open
+Status: resolved
 Blocked by: —
 Map: [Ursprung v0](../map.md)
 
@@ -46,3 +46,45 @@ stripping documentation, and the relevant TC39/Node proposals:
 Write the findings to `.scratch/ursprung-v0/research/06-erasable-typescript.md`, citing
 sources. The deliverable that matters most is the two exhaustive lists — reject, and
 delete — since ticket 11 will turn them directly into parser behaviour.
+
+## Answer
+
+Findings: [`research/06-erasable-typescript.md`](../research/06-erasable-typescript.md).
+Claims are tagged [V] where executed against TypeScript 5.9.3/6.0.3, `ts-blank-space`,
+`amaro` and this repo's `workerd` binary over ~150 hand-built cases, and [D] where read
+from documentation or source.
+
+**The reject list is complete by construction.** `erasableSyntaxOnly` has exactly one
+error code — TS1294 — and exactly six checker call sites: `enum`, parameter property,
+instantiated namespace/module, `import =`, `export =`, and `<T>expr` assertions. Because
+it is a _semantic_ diagnostic rather than a syntactic one, it cannot be lifted from a
+parse; Ursprung reimplements the check rather than inheriting it.
+
+**This ticket's premise was wrong, and the correction matters.** `erasableSyntaxOnly`
+does **not** reject legacy decorators, standard decorators, or `accessor` — all three
+compile clean. Verified here directly: given a file containing a decorated method, an
+`accessor` field and an `enum`, `tsc` flags only the `enum`. All three are nonetheless
+hard `SyntaxError`s on workerd. So **Ursprung's reject list must be strictly larger than
+TypeScript's**, and "we accept whatever `erasableSyntaxOnly` accepts" — which is roughly
+how the map's constraint 8 is phrased — is not a safe rule. Ticket 11 owns this.
+
+**The delete list** is 19 whole-statement forms and 38 fragment positions, enumerated
+against TypeScript's `SyntaxKind` table rather than from memory. One entry is a live
+hazard for us: JSX element type arguments are erased by `tsc` but **missed by
+`ts-blank-space`** — and we parse JSX.
+
+**Stripping is not pure deletion in six places**, each documented with the rule:
+the `f<a>(b)` speculation, `as`/`satisfies` binary regrouping, illegal `??` mixing, ASI
+semicolon injection, and two line-break-sensitive paren moves. Both reference
+implementations still emit invalid JavaScript for `!x as any ** 2` — a bug Ursprung
+would inherit by copying them.
+
+**Whitespace-preserving blanking is universal and exact**, which confirms the map's
+decision to ship no source maps in v0: build diagnostics get original positions for free.
+
+**One genuine conflict with the map.** With no type model, Ursprung cannot perform import
+elision. So `verbatimModuleSyntax` semantics have to become a documented hard requirement
+on the application's `tsconfig`, and — importantly for ticket 12 — `import { type A }`
+leaves a live `import {} from "x"` graph edge while `import type { A }` removes it
+entirely. Colouring must distinguish the two. This surfaced a question nobody had asked,
+now ticket 24.

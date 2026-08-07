@@ -24,7 +24,7 @@ Decide:
 - **Do we need a full expression parser at all?** Provocation worth taking seriously:
   our transformations are narrow — rewrite JSX, rewrite imports/exports, delete type
   spans. Everything else could in principle be passed through as opaque source. Argue
-  whether a *partial* parser that only builds structure where we transform is viable, or
+  whether a _partial_ parser that only builds structure where we transform is viable, or
   whether ambiguity (regex/division, JSX in expression position, ASI) makes it a trap.
   The answer decides the size of the whole bundler.
 - **The AST shape.** ESTree-compatible, or our own? ESTree buys familiarity and a
@@ -47,3 +47,22 @@ Decide:
   fuzzing round-trips. Coordinate with ticket 22.
 - **Performance.** It runs inside a Worker under a CPU limit. Is there a budget, and does
   it change the design — single pass, no backtracking, no regex-based lexing?
+
+## Established by ticket 06 — read before starting
+
+[The erasable TypeScript research](../research/06-erasable-typescript.md) supplies both
+exhaustive lists this ticket needs, and corrects one premise this ticket inherited:
+
+- **`erasableSyntaxOnly` is not sufficient as our accepted subset.** It permits legacy
+  decorators, standard decorators and `accessor`, all three of which are hard
+  `SyntaxError`s on workerd. Ursprung's reject list is strictly larger and is our own.
+- The reject list is otherwise complete by construction: one error code (TS1294), six
+  checker call sites. It is a _semantic_ diagnostic, so we reimplement rather than lift
+  it from a parse.
+- The delete list is 19 whole-statement forms and 38 fragment positions. JSX element type
+  arguments are in it — erased by `tsc`, **missed by `ts-blank-space`** — and we parse JSX.
+- **Stripping is not pure deletion in six places**, each with a documented rule. Both
+  reference implementations still emit invalid JavaScript for `!x as any ** 2`; copying
+  them inherits the bug.
+- **Whitespace-preserving blanking is exact**, so error positions come free and the
+  no-source-maps decision holds.
