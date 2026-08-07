@@ -47,15 +47,15 @@ manifest's `repository` against where the workflow ran.
 ### Retrying a failed publish
 
 A publish that fails does not consume the version number — if the tarball never
-reached the registry, the same version can still be published. Run the Publish
-workflow manually from the Actions tab with the existing tag (`v0.0.4`) as the
-`tag` input; there is no need to bump the version or cut a second release.
+reached the registry, the same version can still be published. Re-run the failed
+run from the Actions tab; there is no need to bump the version or cut a second
+release.
 
 Read the failure before retrying. npm answers an unauthorised write with a bare
 `404 Not Found - PUT https://registry.npmjs.org/ursprung`, the same code it uses
 for a package that does not exist, because distinguishing the two would leak
 which private names are taken. On a package that is demonstrably public, that
 404 means **rejected credentials, not a missing package** — check the trusted
-publisher settings above rather than the version number. The publish step runs
-at `--loglevel verbose` so the log shows whether npm attempted the OIDC exchange
-at all.
+publisher settings above rather than the version number. Provenance is signed
+before the upload and succeeds independently, so a log can show a signed
+Sigstore entry and still have published nothing.

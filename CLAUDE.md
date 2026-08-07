@@ -164,15 +164,9 @@ To cut a release: bump `version` in `packages/ursprung/package.json`, merge to
 `main`, then create a GitHub Release tagged `v<version>`. The tag assertion is
 there to catch the common mistake of tagging without bumping.
 
-`publish.yml` also takes a `workflow_dispatch` with a `tag` input, so a publish
-that failed can be re-run against its existing tag. A failed publish does not
-burn the version number — if nothing reached the registry, the same version is
-still free, and bumping to dodge a failure only hides the real cause. Note that
-`inputs.tag` is empty on a `release` event, which is why the tag is read as
-`${{ inputs.tag || github.event.release.tag_name }}` in three places: the
-`concurrency` group, the checkout `ref`, and the job's `RELEASE_TAG`. The
-`concurrency` group has to repeat the expression rather than reuse the job
-`env`, because `concurrency` is evaluated before any job context exists.
+A failed publish does not burn the version number — if nothing reached the
+registry, the same version is still free. Re-run the failed run from the Actions
+tab rather than bumping to dodge the failure, which only hides the real cause.
 
 The publish job is the one place Node and npm appear in this repo, and they earn
 it: `bun publish` cannot mint npm provenance attestations. It installs with
@@ -198,7 +192,7 @@ because telling the two apart would leak which private names are taken. On a
 package as public as this one, a 404 from `npm publish` means **the credentials
 were rejected**; it never means the version was wrong. Provenance signing
 happens before the upload and succeeds independently, so a log can show a signed
-Sigstore entry and still have published nothing. The publish step therefore runs
-at `--loglevel verbose`, which is the only way to see whether npm attempted the
-OIDC token exchange — the fact that separates a config mismatch from npm never
-trying OIDC in the first place.
+Sigstore entry and still have published nothing. If a publish ever fails this way
+again, `npm publish --loglevel verbose` shows whether npm attempted the OIDC
+token exchange at all — the fact that separates a trusted-publisher config
+mismatch from npm never trying OIDC in the first place.
