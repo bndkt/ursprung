@@ -45,3 +45,20 @@ Decide:
   that a build succeeding implies nothing about type correctness.
 - **The `jsx`/`jsxImportSource` options** required for ticket 15's runtime — they belong
   in this list too.
+
+## Input from ticket 08 — a second audience for the same question
+
+[Ticket 08](./08-route-and-config-authoring-api.md) made the Config file and the Route
+file **evaluated**, by the build host, with a native `import()` — Node ≥22.18's own type
+stripper on Node, Bun's on Bun. So those two files answer to the *host's* accepted subset
+as well as Ursprung's:
+
+- Node's stripper rejects non-erasable syntax, which puts the two files under roughly
+  constraint 8's rules for free — but by a different mechanism, with different error
+  messages, and with a subset that is Node's to change rather than ours.
+- Node requires an explicit extension on relative ESM imports, so `./routes.ts` must be
+  written with it. That is already this repo's house style, but it is now a hard
+  requirement for these two files rather than a convention.
+
+Worth deciding here whether that difference is stated to application authors or quietly
+absorbed.

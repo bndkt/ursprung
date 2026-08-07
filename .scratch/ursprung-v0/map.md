@@ -147,6 +147,36 @@ guaranteed both for years — so a negative from 27 would leave the **client** h
 amendment standing on its own, with only the server reverting to a single bundle. **Not
 folded in until that research lands.**
 
+**Proposed 2026-08-07 — a new constraint 17: the build host evaluates the config; the
+build itself evaluates nothing.** Raised by ticket 08. Proposed wording:
+
+> The Config file is evaluated by the **build host** before the build begins. The build
+> function receives `{ vfs, config }`, where `config` is already plain data; it performs
+> no evaluation and touches no Node API. References inside the evaluated config are
+> normalised to virtual-filesystem paths by the host, at that boundary.
+
+**Why it is an addition and not an amendment to constraint 4.** Constraint 4 binds *build
+modules*, and evaluation sits outside the build entirely — so the build stays pure and
+build-in-a-Worker stays reachable, with such a host supplying the evaluated data by
+whatever means it has. Nothing in constraint 4 changes. This is stated as a constraint
+anyway because it is load-bearing for tickets 10, 12 and 21 and easy to violate by
+accident: the natural instinct is to have the build read its own config.
+
+**What it cost.** Module references had to stop being thunks — an evaluator cannot see
+inside `() => import(...)` and must never call it — so they are
+`new URL(specifier, import.meta.url)`, which carries no type link to the module it names.
+That is the sole reason an API route's `export` is an unchecked string, and the reason
+NOTES #6's params typing is unverifiable rather than merely awkward.
+
+**What it un-decided.** Ticket 07 rejected builder-call route declarations *because* the
+bundler could not evaluate. That reasoning is void — builder calls are evaluable. The
+nested literal survives on its independent grounds (readability, and pathless layouts
+falling out for free), and ticket 07's file has been annotated so the dead argument is not
+reused.
+
+Recorded as [ADR-0005](../../docs/adr/0005-the-host-evaluates-the-config-before-the-build.md),
+which stands whether or not this is folded into the constraint list.
+
 Previously: constraints 8 and 15 were both amended on 2026-08-07, from findings in
 [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
 [capnweb](./issues/01-capnweb-transport-and-capability-model.md) and
@@ -188,6 +218,19 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   code, and the route file naming its callable exports **is the allowlist capnweb does
   not have**. Nineteen ambiguities catalogued in
   [`NOTES.md`](./prototypes/07-demo-app/NOTES.md); tickets 25 and 26 graduated from them.
+- [The route and configuration authoring API](./issues/08-route-and-config-authoring-api.md)
+  — **the Config file is evaluated by the build host before the build begins**, not read
+  from the AST. Ticket 07's circularity argument was wrong (config graph ≠ app graph), and
+  the maintainer rejected AST-reading on a stronger ground: an unevaluated `.ts` config is
+  a trap. The build takes `{ vfs, config }` already-evaluated and stays pure, so
+  constraint 4 is untouched. Consequences: the route tree need not be a literal, so
+  dynamic config and composed subtrees work; lazy thunks give way to
+  `new URL(spec, import.meta.url)`, killing the `.then((m) => m.export)` pattern-match;
+  `layout` splits from `component`; the root omits `path`; static and `:param` only;
+  static-beats-param specificity with duplicate paths a build error; handlers are
+  `(request, context)`; no loaders. NOTES #6 closed as **unanswerable** — constraint 8
+  plus the untyped reference form make a params-versus-path check impossible. Recorded as
+  [ADR-0005](../../docs/adr/0005-the-host-evaluates-the-config-before-the-build.md).
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
@@ -201,8 +244,11 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
 - **The client runtime.** Event delegation, and how a resumed page fetches the code for
   an interaction that hasn't loaded yet. Shape depends entirely on the resumability wire
   format.
-- **Runtime routing and dispatch.** Matching, params, 404s, redirects, trailing slashes.
-  Falls out of the route authoring API once that's settled.
+- **Runtime routing and dispatch.** Narrowed by
+  [ticket 08](./issues/08-route-and-config-authoring-api.md): matching, params and
+  specificity are decided, and the route table is a generated module rather than the route
+  file. What remains is 404s, redirects and trailing slashes — and the first two are
+  entangled with [ticket 26](./issues/26-errors-after-stream-start.md).
 - **Client-side navigation.** Whether v0 has it at all, or whether every link is a full
   document load. Cheaper to answer once streaming and resumability are pinned. The trap
   found by [ticket 02](./issues/02-tc39-signals-and-polyfill.md) — two Route bundles live
@@ -216,7 +262,10 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
   throws — graduated to [ticket 26](./issues/26-errors-after-stream-start.md) once
   [ticket 07](./issues/07-canonical-demo-app-prototype.md) made it concrete.
 - **Document head and metadata.** Title, meta tags, and which layer owns them.
-- **Forms and mutations.** Whether they route through RPC or through API routes.
+- **Forms and mutations.** Narrowed by
+  [ticket 08](./issues/08-route-and-config-authoring-api.md), which lets one route carry
+  both page fields and an `api` map: the choice is now RPC versus the page's own
+  `api.POST` at its own URL, rather than RPC versus a separate API route somewhere else.
 - **Build diagnostics.** Error message format, source positions, and how a build error
   survives having no scope model to point at.
 - **Package layout.** The exact subpath export surface of the published `ursprung`

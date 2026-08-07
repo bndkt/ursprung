@@ -53,6 +53,24 @@ belongs to.
 
 ## Answer
 
+> ⚠️ **Amended by [ticket 08](./08-route-and-config-authoring-api.md) on 2026-08-07.**
+> The premise below — "the bundler reads the route file and cannot evaluate it, since
+> evaluating means building first" — **does not hold**, and the argument must not be
+> reused. It conflates two graphs: building the *config* graph needs resolution and type
+> stripping, neither of which needs the route tree, which is required only to emit *route*
+> bundles. Two phases, no cycle. The config is now evaluated by the host before the build.
+>
+> What changes: **variant C's rejection is void as reasoned** — builder calls are
+> evaluable — though the conclusion survives, because the nested literal also won on
+> readability and on pathless layouts falling out for free. The route tree no longer has
+> to be a literal at all. **Lazy thunks are gone**, superseded by `new URL(specifier,
+> import.meta.url)`, because a thunk is opaque to an evaluator and must never be called.
+>
+> What stands, untouched: **API methods declared in the route file**, and the property
+> that makes it load-bearing for ticket 20 — the route file is the application's entire
+> declared HTTP surface, and naming the callable exports in one place **is** the allowlist
+> capnweb does not provide.
+
 Prototype: [`prototypes/07-demo-app/`](../prototypes/07-demo-app/). The surfaced
 ambiguities are [`NOTES.md`](../prototypes/07-demo-app/NOTES.md) — nineteen, each tagged
 with its destination ticket. That file, not the app, is this ticket's output.

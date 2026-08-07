@@ -47,3 +47,18 @@ This blocks tickets 09 and 20: 09 cannot settle the component signature without 
 
 The mechanism, the reason, and the exact signature an application author writes — for a
 Server component, an API handler, and a function behind the Server boundary.
+
+## Input from ticket 08 — the seam is named, the decision is still yours
+
+[Ticket 08](./08-route-and-config-authoring-api.md) fixed the API handler signature as
+`(request, context)`, with `context.params` carrying path params. That shape was chosen
+**specifically to leave this ticket free**: bindings may ride on `context`, or arrive
+ambiently, without changing the handler's arity either way.
+
+Mirroring Workers' own `fetch(request, env, ctx)` was rejected for the opposite reason —
+it would have decided this ticket's question in the signature, and left path params
+homeless.
+
+Components receive `props.params`, and neither components nor layouts receive `request`
+by default. That is the same seam: if this ticket concludes there is ambient per-request
+context, `request` reaches them through it.
