@@ -50,7 +50,10 @@ and reopening one is a scope change, not a ticket.
 7. Applications **may** depend on npm packages — ESM only (see 14).
 8. The parser builds a real AST for expressions, statements, imports and JSX, and treats
    type syntax as **opaque delete-spans**. No type model, no scope/binding model. Loud
-   errors on non-erasable constructs.
+   errors on non-erasable constructs — and **the reject list is Ursprung's own, strictly
+   larger than `erasableSyntaxOnly`'s**. That flag permits legacy decorators, standard
+   decorators and `accessor`, all three of which are `SyntaxError`s on workerd, so
+   "whatever TypeScript accepts" is not a safe rule.
 9. Every first-party module declares its side: `.server.`, `.client.` or `.shared.`.
    An unsuffixed `.ts`/`.tsx` reached by the graph is a build error.
 10. One self-contained ESM file per bundle. No chunks, no shared extraction, no runtime
@@ -62,30 +65,29 @@ and reopening one is a scope change, not a ticket.
 13. The caller populates the VFS with package files; Ursprung only reads it. Ursprung is
     never a package manager and never fetches from a registry.
 14. npm dependencies are **ESM only** in v0. A CJS-only package is a hard build error.
-15. `node:*` imports are external on the server (`nodejs_compat` serves them) and a hard
-    build error on the client. No browser polyfills for Node builtins, ever.
+15. **No polyfills, ever, on any target.** On the server the only permitted externals are
+    `cloudflare:*` and those `node:*` specifiers **workerd natively implements**; a
+    `node:*` import workerd does not implement natively is a hard build error, because
+    Wrangler's unenv polyfills are injected by the esbuild pass that disabling bundling
+    switches off. The `node:` prefix is **required** — unprefixed builtins, which
+    `nodejs_compat_v2` legalises, are a build error. On the client every `node:*` import
+    is a hard build error. The permitted native set is a function of the compatibility
+    date and must be pinned alongside it.
 16. Third-party modules are **uncoloured** — their side is inferred from reachability.
     First-party modules must declare. We control our source; we don't control npm's.
 
 ## Pending amendments
 
-Proposed changes to the locked constraints, surfaced by resolved tickets. **Not yet
-approved by the maintainer** — do not treat as settled.
+Where a resolved ticket shows a locked constraint to be wrong, it is proposed here rather
+than edited in — the constraints are the maintainer's. Approved amendments are folded
+into the list above and struck from this section.
 
-- **Constraint 15 is wrong in three ways, and this is the biggest pending amendment.**
-  (a) It names only `node:*`, but capnweb's Workers build imports `cloudflare:workers`,
-  so `cloudflare:*` must be external on the server too. (b) `nodejs_compat_v2` makes
-  **unprefixed** builtins legal — `import "fs"`, 76 names — so a `/^node:/` externals
-  rule leaks. (c) Most seriously, the constraint assumes `nodejs_compat` serves the
-  builtins, but unenv's polyfills are injected by **Wrangler's esbuild pass**, which
-  disabling bundling switches off; only workerd's natively-implemented modules and stubs
-  survive. Wrangler warns about exactly this combination. Surfaced by
-  [capnweb](./issues/01-capnweb-transport-and-capability-model.md) and
-  [ESM resolution](./issues/04-esm-resolution-and-export-conditions.md).
-- **Constraint 8 is phrased as if `erasableSyntaxOnly` defines our accepted subset.**
-  It does not — that flag permits decorators and `accessor`, which are `SyntaxError`s on
-  workerd. Proposed: Ursprung's reject list is explicitly its own, strictly larger.
-  Surfaced by [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md).
+_None pending._ Constraints 8 and 15 were both amended on 2026-08-07, from findings in
+[the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
+[capnweb](./issues/01-capnweb-transport-and-capability-model.md) and
+[ESM resolution](./issues/04-esm-resolution-and-export-conditions.md). Constraint 15
+became stricter rather than looser: no polyfills at all, workerd natives only. Recorded
+as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
 
 ## Decisions so far
 

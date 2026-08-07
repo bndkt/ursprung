@@ -69,3 +69,22 @@ implementably and answers several of this ticket's questions outright:
   `node_modules` is symlinks into `.bun/<name>@<ver>/node_modules/`. Without link
   resolution a VFS gets the wrong dependencies and the wrong `"type"` — and the same file
   reached by two paths must not become two nodes in ticket 12's graph.
+
+## Amended constraint 15 — the externals rule this ticket must implement
+
+Constraint 15 was tightened on 2026-08-07 (see
+[ADR-0004](../../../docs/adr/0004-no-polyfills-workerd-natives-only.md)) and it lands
+squarely on this ticket:
+
+- Server externals are exactly `cloudflare:*` plus the `node:*` specifiers workerd
+  implements **natively**. Anything else is a hard build error naming the package and the
+  import chain.
+- The `node:` prefix is required; unprefixed builtins are an error even though
+  `nodejs_compat_v2` legalises them.
+- Client: every `node:*` import is an error.
+
+Two things this ticket now owns as a result. **Where does the list of natively-implemented
+modules come from**, given it grows with the compatibility date — is it generated from
+workerd, hand-maintained with a pinned date, or read from the application's compatibility
+date at build time? And **what does the error say**, since "use a different package" is
+the only fix and the author needs the chain to know which one.
