@@ -220,15 +220,15 @@
         </main>
 
         <footer class="py-12">
-          <div
-            class="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pl-8 text-base/7 text-stone-500 sm:pl-12 sm:text-sm/6"
-          >
+          <div class="relative flex items-center pl-8 text-stone-500 sm:pl-12">
             <span
               class="absolute top-1/2 left-0 size-1.5 -translate-1/2 rounded-full bg-stone-950/40 ring-2 ring-stone-50 dark:bg-white/40 dark:ring-stone-950"
               aria-hidden="true"
             ></span>
-            <p>ursprung is open source and built in the open.</p>
-            <!-- Each mark is the vendor's own artwork, single-colour: GitHub's
+            <!-- The row is the footer's only content, so the div's height is the
+                 icons' height and the node lands on their horizontal centre without
+                 anything to align by hand.
+                 Each mark is the vendor's own artwork, single-colour: GitHub's
                  `mark-github` octicon, npm's wordmark, Discord's Clyde symbol. The
                  fill is dropped from every path in favour of `fill-current`, so all
                  three inherit the footer's text colour and flip with the rest of the
