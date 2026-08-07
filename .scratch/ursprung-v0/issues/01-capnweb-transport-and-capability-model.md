@@ -86,12 +86,25 @@ Other consequences:
 **`cloudflare:*` needs externalising on the server, and constraint 15 names only
 `node:*`.** Flagged on the map as a pending amendment.
 
-**One correction to the research.** The agent reported that the `workerd` condition
-yields `index-workers.js`. That does not follow automatically, and the reason matters for
-ticket 13. capnweb's `exports` object has key order `bun, types, import, require,
-workerd`, and Node resolves conditions in **object key order**, first match wins — not in
-the order the resolver prefers them. A resolver honouring both `import` and `workerd`
-therefore matches `import` first and gets `dist/index.js`, the generic build. **Condition
-ordering is not ours to control; the package author's key order decides.** Ticket 13 must
-design against that, and we need to establish empirically what our own server target
-actually resolves capnweb to before ticket 20 relies on either build.
+**A methodological trap, worth more than the fact it nearly cost us.** Node resolves
+export conditions in **object key order** — first match wins — so which build you get
+depends entirely on the package author's key order, not on the order a resolver prefers
+its conditions in. Reading capnweb's `exports` from `registry.npmjs.org` gives the order
+`bun, types, import, require, workerd`, from which it follows that `import` matches first
+and a Workers target gets the _generic_ build. That conclusion was recorded here and is
+**wrong**: the npm registry reorders JSON object keys by length then alphabetically
+(verified — both the `/latest` and the versioned `/capnweb/0.10.0` endpoints return the
+same mangled order, and the whole manifest is sorted that way). The authored order, from
+the repository, is `workerd, bun, types, import, require` — **`workerd` first**, so a
+Workers target does get `dist/index-workers.js` and the `cloudflare:workers` import above
+is real. Ticket 04 caught this independently; credit to it.
+
+Two things follow. **Never read a manifest's condition order from the registry API** —
+only from the tarball or the repository — which ticket 13 must encode as a rule, since
+Ursprung reads manifests for a living. And condition _ordering_ is not a thing we
+configure: what we choose is a condition **set**, and the package decides precedence.
+
+_Caveat on this verification:_ the authored order was read from the repository's `main`
+branch; the `v0.10.0` tag path returned 404, so the tag itself was not checked. The
+tarball could not be fetched from here — the proxy terminated the connection — so this
+should be re-confirmed against the installed package once capnweb is a real dependency.

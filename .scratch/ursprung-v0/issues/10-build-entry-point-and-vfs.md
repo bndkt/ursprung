@@ -39,3 +39,12 @@ Decide:
   timestamp, or a random name anywhere in the build.
 
 The output of this ticket is a written interface, not prose about one.
+
+## Established by ticket 04 — read before starting
+
+[The resolution research](../research/04-resolution.md) puts a hard floor under this
+ticket's "what methods, exactly?" question: `ESM_RESOLVE` calls **realpath**, and this
+repo's own Bun `node_modules` is symlinks into `.bun/<name>@<ver>/node_modules/`. So the
+VFS interface needs **directory existence, a declared root, and a way to resolve links** —
+not just `readFile`. A VFS that mirrors a symlinked tree without resolving links returns
+the wrong dependencies and the wrong `"type"`, silently.

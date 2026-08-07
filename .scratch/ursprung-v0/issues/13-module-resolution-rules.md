@@ -41,3 +41,31 @@ Decide:
 - **Symlinks and realpath.** Package managers link heavily. Ticket 04 will report the
   traps; decide whether we resolve symlinks and what identity a module has if we don't —
   the same file reachable by two paths must not become two nodes in ticket 12's graph.
+
+## Established by ticket 04 — read before starting
+
+[The resolution research](../research/04-resolution.md) transcribes Node's algorithm
+implementably and answers several of this ticket's questions outright:
+
+- **`exports` cannot be mandatory.** Our own `signal-polyfill` dependency has no
+  `exports` field at all — only `main`. Bare-subpath fallback is load-bearing on day one.
+- **Not skippable despite looking legacy:** `main`, `imports`/`#` specifiers,
+  self-reference, `*` subpath patterns, array targets and `null` targets.
+- **Skippable:** extension probing, directory indexes, the `require`/`node-addons`/
+  `module-sync` conditions, wasm and addon formats.
+- **Conditions are a set, not an ordered list** — this ticket's framing was wrong. Node
+  uses a `SafeSet`; precedence is the package author's key order. Recommended membership:
+  server `["workerd", "worker", "browser", "module", "production", "import"]`, client
+  `["browser", "module", "production", "import"]`, excluding `types`, `require`, `node`,
+  `development`, `react-server`.
+- **Encode as a hard rule: never read a manifest from the npm registry API.** It reorders
+  keys by length, destroying condition precedence. This already produced one wrong
+  conclusion on ticket 01. Tarball or repository only.
+- **CJS detection is per-module, not per-package** — hono, zod and date-fns ship both.
+  The one ambiguous case is `.js` with no `"type"`; the recommendation is the
+  conservative "treat as CJS" rule, since the permissive one needs the scope model
+  constraint 8 rules out.
+- **Symlinks are not optional.** `ESM_RESOLVE` realpaths, and this repo's own Bun
+  `node_modules` is symlinks into `.bun/<name>@<ver>/node_modules/`. Without link
+  resolution a VFS gets the wrong dependencies and the wrong `"type"` — and the same file
+  reached by two paths must not become two nodes in ticket 12's graph.

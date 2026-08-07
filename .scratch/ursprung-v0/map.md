@@ -72,10 +72,16 @@ and reopening one is a scope change, not a ticket.
 Proposed changes to the locked constraints, surfaced by resolved tickets. **Not yet
 approved by the maintainer** — do not treat as settled.
 
-- **Constraint 15 is too narrow.** It names only `node:*` as external on the server, but
-  capnweb's Workers build imports `cloudflare:workers`. Proposed: externalise
-  `cloudflare:*` as well as `node:*` on the server, and keep both a hard error on the
-  client. Surfaced by [capnweb](./issues/01-capnweb-transport-and-capability-model.md).
+- **Constraint 15 is wrong in three ways, and this is the biggest pending amendment.**
+  (a) It names only `node:*`, but capnweb's Workers build imports `cloudflare:workers`,
+  so `cloudflare:*` must be external on the server too. (b) `nodejs_compat_v2` makes
+  **unprefixed** builtins legal — `import "fs"`, 76 names — so a `/^node:/` externals
+  rule leaks. (c) Most seriously, the constraint assumes `nodejs_compat` serves the
+  builtins, but unenv's polyfills are injected by **Wrangler's esbuild pass**, which
+  disabling bundling switches off; only workerd's natively-implemented modules and stubs
+  survive. Wrangler warns about exactly this combination. Surfaced by
+  [capnweb](./issues/01-capnweb-transport-and-capability-model.md) and
+  [ESM resolution](./issues/04-esm-resolution-and-export-conditions.md).
 - **Constraint 8 is phrased as if `erasableSyntaxOnly` defines our accepted subset.**
   It does not — that flag permits decorators and `accessor`, which are `SyntaxError`s on
   workerd. Proposed: Ursprung's reject list is explicitly its own, strictly larger.
@@ -97,6 +103,11 @@ approved by the maintainer** — do not treat as settled.
   from source plus a captured production payload; **payload measured at 15.5% of HTML
   bytes**; state is a whole-document post-pass in both v1 and v2, which is strong
   evidence _for_ constraint 12; v1's HTML-comment encoding shipped an XSS CVE.
+- [ESM resolution and export conditions](./issues/04-esm-resolution-and-export-conditions.md)
+  — algorithm transcribed implementably with a keep/skip table; **conditions are a set,
+  not an ordered list** — the package author's key order decides precedence; `main`
+  fallback and `#` imports are not skippable; the npm registry **reorders manifest keys**,
+  so never read condition order from it.
 - [Wrangler's experimental TypeScript config](./issues/05-wrangler-experimental-config-and-build-contract.md)
   — **`noBundle` exists** (on `wrangler.config.ts`, with `build.command` and
   `assetsDirectory`), so the vision's deployment flow is expressible; the entrypoint is
