@@ -1,0 +1,77 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+concurrency:
+  group: npm-publish-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    # npm's trusted publisher for `ursprung` is bound to this repository, this
+    # workflow file name and this environment. Renaming any of the three breaks
+    # OIDC publishing until the config on npmjs.com is updated to match.
+    environment: npm
+    permissions:
+      contents: read
+      # Lets the runner mint the OIDC token npm exchanges for a short-lived
+      # publish credential and signs the provenance attestation with. Without
+      # it `npm publish` cannot authenticate and cannot attach provenance.
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2.2.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: "lts/*"
+          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm >= 11.5.1 and provenance needs >= 9.5.0;
+      # the Node LTS line does not always ship a new enough npm.
+      - name: Update npm
+        run: npm install --global npm@latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      # The pre-commit hook only ever sees staged files, so the full suite runs
+      # here before anything is pushed to the registry — a publish cannot be
+      # taken back, only deprecated.
+      - name: Check formatting
+        run: bun run fmt:check
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Typecheck
+        run: bun run typecheck
+
+      - name: Test
+        run: bun test
+
+      # The release tag is what a reader of the provenance attestation sees, so
+      # it has to agree with the version actually going to the registry.
+      - name: Verify release tag matches package version
+        working-directory: packages/ursprung
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          PACKAGE_VERSION="$(npm pkg get version --workspaces=false | tr -d '"')"
+          echo "release tag: $RELEASE_TAG / package version: $PACKAGE_VERSION"
+          test "$RELEASE_TAG" = "v$PACKAGE_VERSION"
+
+      # `--provenance` and `--access public` are redundant with the
+      # `publishConfig` block in the package manifest, and are repeated here so
+      # the workflow reads as the complete story of what gets published.
+      - name: Publish package
+        working-directory: packages/ursprung
+        run: npm publish --provenance --access public

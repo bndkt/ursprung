@@ -1,9 +1,33 @@
 {
   "name": "ursprung",
-  "version": "0.1.0",
+  "version": "0.0.4",
+  "description": "The ursprung package — currently exposes its own name and version.",
+  "keywords": [
+    "ursprung"
+  ],
+  "homepage": "https://github.com/bndkt/ursprung#readme",
+  "bugs": {
+    "url": "https://github.com/bndkt/ursprung/issues"
+  },
+  "license": "MIT",
+  "author": "Benedikt Müller",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bndkt/ursprung.git",
+    "directory": "packages/ursprung"
+  },
+  "files": [
+    "src",
+    "!src/**/*.test.ts"
+  ],
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "test": "bun test",

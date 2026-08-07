@@ -15,7 +15,7 @@ Exactly one file:
 apps/web/public/posts/YYYY-MM-DD-slug.md
 ```
 
-- `YYYY-MM-DD` — the date the post *covers*, not necessarily today. For a daily
+- `YYYY-MM-DD` — the date the post _covers_, not necessarily today. For a daily
   update that is the day whose work is being reported.
 - `slug` — lowercase, hyphen-separated, two to five words, no date repeated in it.
   Name the subject, not the genre: `zero-build-package-exports`, not `dev-update`.
@@ -118,7 +118,7 @@ monorepo, a bundler, and a type checker are. They do not know Ursprung.
   so there is no build step to run before the server boots" beats "changed exports
   field in package.json".
 - **Assume the general, explain the specific.** Never define `workspace`. Always
-  explain what `workspace:*` means *here*.
+  explain what `workspace:*` means _here_.
 - **Entertaining means having a point of view**, not jokes bolted onto a changelog.
   Trade-offs that were genuinely hard, things that turned out to be wrong, the
   moment a constraint became obvious — that is the entertainment.
