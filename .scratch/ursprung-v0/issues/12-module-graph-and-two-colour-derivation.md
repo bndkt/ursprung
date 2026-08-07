@@ -29,7 +29,7 @@ Decide:
   client module then reach the client bundle? What about `.shared.` importing either?
   Produce the complete 3×3 matrix of who may import whom, with the meaning of each cell.
   This matrix is the spec's most quotable artifact.
-- **Enforcement.** How is the invariant *proven* rather than hoped for? Is there a check
+- **Enforcement.** How is the invariant _proven_ rather than hoped for? Is there a check
   that runs after emission — no module coloured server-only appears in any client
   bundle — and is it a test, an assertion in the build, or both? An invariant this
   important should not rest on the traversal being written correctly.

@@ -25,7 +25,7 @@ Decide, starting with the options and adding any others:
   top-level `await` and circular references get awkward — though constraint 10 already
   bans cycles.
 - **Prefix-rename every top-level declaration mechanically**, e.g. every declaration in
-  module N becomes `_N_name`. This needs only the top-level *declaration* names, not a
+  module N becomes `_N_name`. This needs only the top-level _declaration_ names, not a
   full scope model — but a nested reference to a shadowed inner variable of the same name
   must not be rewritten, which is exactly the scope problem creeping back. Establish
   whether a cheap conservative rule exists, or whether this is a trap.

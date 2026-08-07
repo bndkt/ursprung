@@ -33,7 +33,7 @@ Decide:
   happen, is it possible to bypass, and is there an unescaped-HTML escape hatch at all?
 - **Errors mid-stream.** The status code is already sent and half the document is on the
   wire when a component throws. What does the client receive? This is the ugliest case in
-  streaming SSR and v0 needs *an* answer even if it is a blunt one.
+  streaming SSR and v0 needs _an_ answer even if it is a blunt one.
 - **Client components during SSR.** They render on the server (constraint from the
   vision). What is different about rendering one — what extra markers or attributes does
   the output carry, and does that belong here or in ticket 19?

@@ -13,7 +13,7 @@ settles the semantics that tickets 15, 17, 18 and 19 all build on.
 
 Decide:
 
-- **What is a component?** A function from props to… what? And what does JSX *evaluate*
+- **What is a component?** A function from props to… what? And what does JSX _evaluate_
   to — a description the renderer walks, or something that constructs output directly?
   With no VDOM there is no reconciliation pass, so the tree may only ever be built once.
   Say plainly what exists at runtime after a component has run.

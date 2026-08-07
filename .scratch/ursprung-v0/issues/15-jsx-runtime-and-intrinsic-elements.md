@@ -8,7 +8,7 @@ Map: [Ursprung v0](../map.md)
 ## Question
 
 Ursprung provides its own JSX runtime and an explicit list of intrinsic elements, and
-deliberately does not inherit React's semantics. Ticket 09 settles what a component *is*;
+deliberately does not inherit React's semantics. Ticket 09 settles what a component _is_;
 this ticket settles the syntax-to-runtime contract and the typing surface.
 
 Decide:

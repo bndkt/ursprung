@@ -42,7 +42,7 @@ Decide:
   resumability; say concretely how it works.
 - **Payload size.** What is the budget for a trivial page, and what grows with what?
   Name the pathological case.
-- **The falsifiable test.** How do we *prove* the client did not re-render — a counter, a
+- **The falsifiable test.** How do we _prove_ the client did not re-render — a counter, a
   build-time assertion, an instrumented host (ticket 16) that records zero create
   operations on load? Decide it here; it belongs in the demo app from ticket 07.
 

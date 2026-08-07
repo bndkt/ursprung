@@ -33,8 +33,8 @@ Decide:
 - **Events.** DOM events are a specific model. What is the host-neutral shape, and how
   much of the DOM event object survives?
 - **How much do we build in v0?** Options: define the interface and implement DOM and
-  string hosts against it; or write directly against the DOM and only *keep the seam
-  clean*, documenting where a host boundary would go. The second is cheaper and honest;
+  string hosts against it; or write directly against the DOM and only _keep the seam
+  clean_, documenting where a host boundary would go. The second is cheaper and honest;
   the first is the only one that actually proves the abstraction works.
 - **The test.** Whatever we choose, name the falsifiable check — e.g. a trivial third
   host implementation that records operations to an array, which would also be useful for
