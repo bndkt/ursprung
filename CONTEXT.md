@@ -1,4 +1,4 @@
-# Ursprung
+# ursprung
 
 A full-stack TypeScript application framework written from scratch — its own bundler,
 its own JSX runtime, its own type stripping — targeting Cloudflare Workers, with AI
@@ -112,7 +112,7 @@ _Avoid_: SSR in prose (fine in code), prerendering
 **Resumption**:
 The client continuing an application that was rendered on the server, without executing
 the component tree again.
-_Avoid_: hydration — which is the thing Ursprung deliberately does not do
+_Avoid_: hydration — which is the thing ursprung deliberately does not do
 
 **Resumability payload**:
 What the server emits alongside the HTML so that the client can resume.
@@ -124,6 +124,6 @@ browser, a string on the server, and a native UI layer later.
 _Avoid_: renderer, backend, platform
 
 **Intrinsic element**:
-An element Ursprung knows natively, as opposed to a component. Explicitly enumerated
+An element ursprung knows natively, as opposed to a component. Explicitly enumerated
 rather than open-ended.
 _Avoid_: host element, tag, primitive

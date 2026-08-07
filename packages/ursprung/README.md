@@ -2,8 +2,20 @@
 
 [![npm](https://img.shields.io/npm/v/ursprung)](https://www.npmjs.com/package/ursprung)
 
-Currently exposes its own name and version — the package exists so the
-publishing pipeline around it is real.
+_ursprung_ is German for origin. It is intended to become a full-stack TypeScript
+application framework written from scratch — its own bundler, its own JSX runtime,
+its own type stripping — targeting Cloudflare Workers, with AI agents as its
+first-class users.
+
+**None of that is here yet.** This package currently exposes its own name and
+version and nothing else. It is published anyway so that the pipeline around it —
+trusted publishing, provenance, the release checks — is real rather than
+hypothetical, and so the name is held. There is no reason to depend on it.
+
+The architecture is being decided in the open, before it is written:
+[the dev log](https://ursprung.dev/posts/) is the readable version, and the
+[repository](https://github.com/bndkt/ursprung) carries the glossary, the decision
+records and the open questions.
 
 ```bash
 bun add ursprung

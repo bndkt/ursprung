@@ -16,10 +16,12 @@ This is a single-context repo:
 
 ```
 /
-├── CONTEXT.md
+├── CONTEXT.md                         ← the glossary; the project's ubiquitous language
 ├── docs/adr/
-│   ├── 0001-some-decision.md          ← illustrative; no ADRs exist yet
-│   └── 0002-another-decision.md
+│   ├── 0001-modules-declare-their-side-in-the-filename.md
+│   ├── 0002-applications-may-use-npm-dependencies-esm-only.md
+│   ├── 0003-the-build-is-a-pure-function-over-a-virtual-filesystem.md
+│   └── 0004-no-polyfills-workerd-natives-only.md
 ├── apps/
 └── packages/
 ```

@@ -111,6 +111,22 @@ to `/posts/`. There is no `ASSETS` binding, because nothing in the Worker needs
 to reach the asset store by hand; adding one means an `env` entry in
 `cloudflare.config.ts` and a regenerated `worker-configuration.d.ts`.
 
+### The dev log
+
+`apps/web/public/posts/` is the whole blog. Each post is one markdown file named
+`YYYY-MM-DD-slug.md` with YAML front matter (`title`, `description`, `date`) —
+and that file is what a reader gets. There is no renderer, no route and no
+markdown pipeline: the asset store serves the `.md` bytes as they are, which is
+why the index copy says every post is served as plain Markdown.
+
+`public/posts/index.html` is the list, and it is **written by hand — nothing
+scans the directory**. One `<li>` per file, newest first, whose heading and
+teaser are the post's front-matter `title` and `description` verbatim. A post
+whose entry is missing is still deployed and still reachable by URL, but nothing
+on the site links to it, so it is invisible in practice. The
+[`ursprung-blog`](.claude/skills/ursprung-blog/SKILL.md) skill writes both halves;
+adding a post by hand means remembering the second one.
+
 Styling is [Tailwind](https://tailwindcss.com) v4 via its standalone CLI. This is
 the repo's only compile-to-a-file build step, and it is deliberately small:
 
@@ -141,9 +157,12 @@ The consequence worth stating: opening `public/posts/index.html` straight off
 disk gets unstyled HTML until `bun run build:css` has run at least once.
 
 Both documents are styled with the [ui.sh](https://ui.sh) `design` skill's
-guidelines. That skill is installed globally under `$HOME/.claude/skills/design`
-and is not vendored into this repo, so it is not covered by `skills-lock.json` or
-`bun run skills:update`.
+guidelines. That skill is installed on the maintainer's machine rather than
+vendored here, so it is not in `skills-lock.json`, `bun run skills:update` does
+not fetch it, and a session that does not have it will not see it in its skill
+list. The guidelines it encodes are the reason the two documents look the way
+they do, and the paragraph below plus the `@theme` note above are the parts of it
+this repo depends on — enough to keep a change consistent without the skill.
 
 The layout of both is one idea taken from the name — an **origin axis**. A single
 hairline runs the full length of the page, the origin is marked at its top with
@@ -422,6 +441,32 @@ The five canonical triage roles, used verbatim as `Status:` values. See
 
 Single-context — one `CONTEXT.md` and `docs/adr/` at the repo root. See
 `docs/agents/domain.md`.
+
+## Where skills come from
+
+Three sources, with three different update paths. Knowing which one a skill came
+from is what tells you whether editing it will survive.
+
+- **`.agents/skills/`** — vendored copies of `mattpocock/skills` and
+  `cloudflare/skills`, pinned by content hash in `skills-lock.json` and refreshed
+  by `bun run skills:update`. **Edits here are overwritten on the next sync**, which
+  is why repo-specific preferences live in this file instead (see _Question style_
+  below) and why `oxfmt` ignores the directory.
+- **Marketplace plugins** — `.claude/settings.json` enables
+  `mattpocock-skills@mattpocock` and `cloudflare@cloudflare`, the same two upstreams
+  the vendored copies came from. So most of these skills are present twice, from two
+  update paths that can drift apart: the plugin follows its marketplace, the vendored
+  copy stays on its pinned hash until someone runs `skills:update`. When the two
+  disagree, `skills-lock.json` is the one this repo actually pinned.
+- **`.claude/skills/`** — written for this repo and versioned with it. Currently one:
+  [`ursprung-blog`](.claude/skills/ursprung-blog/SKILL.md), which writes a dev-log
+  post and its entry in the post list. Nothing overwrites it, so this is where a
+  repo-specific workflow belongs; edit it in place when the thing it writes changes
+  shape.
+
+`.mcp.json` is separate from all three: it declares two MCP servers for the project
+— `cloudflare-docs` (HTTP, allow-listed in `.claude/settings.json`) and
+`chrome-devtools` (spawned with `bunx`).
 
 ## Question style
 

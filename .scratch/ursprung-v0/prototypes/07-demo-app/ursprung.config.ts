@@ -25,7 +25,7 @@ export default defineConfig({
 
   // AMBIGUITY (see NOTES.md #11): constraint 15 pins the permitted `node:*` set
   // as a function of the compatibility date — but the compatibility date lives in
-  // `cloudflare.config.ts`, which is Wrangler's file, not ours. Ursprung either
+  // `cloudflare.config.ts`, which is Wrangler's file, not ours. ursprung either
   // reads it out of Wrangler's config (coupling to an experimental format) or
   // asks for it twice and lets the two drift.
   compatibilityDate: "2026-08-01",

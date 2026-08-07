@@ -3,14 +3,14 @@
 Type: research
 Status: resolved
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
 The vision asks for Wrangler's experimental TypeScript configuration **and** disabled
-bundling, with a custom build command that invokes Ursprung. This repo already uses the
+bundling, with a custom build command that invokes ursprung. This repo already uses the
 experimental config (see `apps/web/cloudflare.config.ts` and the notes in `CLAUDE.md`),
-so half the facts are local. Ticket 21 designs the Ursprung→Wrangler output contract and
+so half the facts are local. Ticket 21 designs the ursprung→Wrangler output contract and
 needs the rest confirmed rather than assumed.
 
 Establish from primary sources — `@cloudflare/config`'s type definitions, Wrangler's
@@ -62,7 +62,7 @@ settings in `wrangler.config.ts`.
 What this pins down for the build:
 
 - **With `noBundle`, the entrypoint is uploaded byte-for-byte, untransformed.** A `.ts`
-  entry reaches workerd and dies on `Unexpected identifier 'satisfies'`. Ursprung must
+  entry reaches workerd and dies on `Unexpected identifier 'satisfies'`. ursprung must
   emit fully type-stripped, fully import-resolved JavaScript — no transformation
   whatsoever happens downstream of us.
 - **Imports are not followed.** Additional modules come from a filesystem walk under

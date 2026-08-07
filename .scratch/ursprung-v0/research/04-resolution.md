@@ -1,7 +1,7 @@
 # 04 — ESM resolution and export conditions on workerd and in the browser
 
 Research findings for [issue 04](../issues/04-esm-resolution-and-export-conditions.md).
-Map: [Ursprung v0](../map.md). Written 2026-08-07.
+Map: [ursprung v0](../map.md). Written 2026-08-07.
 
 Vocabulary follows [`CONTEXT.md`](../../../CONTEXT.md): **module**, **side**, **the
 graph**, **virtual filesystem**, **server bundle**, **route bundle**.
@@ -63,20 +63,20 @@ over three primitive filesystem reads `[S1]`:
 3. read the bytes at `u` (only ever `package.json`, and — in Node — the module source
    for `DETECT_MODULE_SYNTAX`).
 
-Plus one operation Ursprung must decide about explicitly: **realpath** (`ESM_RESOLVE`
+Plus one operation ursprung must decide about explicitly: **realpath** (`ESM_RESOLVE`
 step 7.4, "Set `resolved` to the real path of `resolved`") `[S1]`. See §8.1.
 
 Everything else is string and URL manipulation. This is compatible with constraint 13
-(the caller populates the virtual filesystem; Ursprung only reads) — with the two caveats
+(the caller populates the virtual filesystem; ursprung only reads) — with the two caveats
 in §8.1 and §8.2.
 
 ---
 
 ## 2. The resolution algorithm, in implementable form
 
-Transcribed from `[S1]` with Ursprung decisions marked. Notation follows Node's:
+Transcribed from `[S1]` with ursprung decisions marked. Notation follows Node's:
 **bold** names are subroutines, `→ SKIP` marks a step that exists only for CommonJS,
-legacy packages, or Node-only features, and can be omitted from Ursprung's resolver
+legacy packages, or Node-only features, and can be omitted from ursprung's resolver
 without breaking any correct ESM-only package.
 
 ### 2.1 ESM_RESOLVE(specifier, parentURL)
@@ -104,7 +104,7 @@ without breaking any correct ESM-only package.
 9. return (format, resolved)
 ```
 
-Notes for Ursprung:
+Notes for ursprung:
 
 - Step 2 fires **before** the `#` and bare-specifier branches. `node:fs` is a valid URL,
   so it lands here, not in `PACKAGE_RESOLVE` step 3. Both paths reach the same place;
@@ -119,7 +119,7 @@ loading"]`, and in the resolver feature list: "No default extensions / No folder
   belong exclusively to `require()` `[S2]`. **→ SKIP both.**
 - Step 7d (realpath) — see §8.1. This is the single step where a real filesystem gives
   Node something a `Map`-backed virtual filesystem does not.
-- Ursprung will want an extra step between 7c and 7e: apply its own **externals** rule
+- ursprung will want an extra step between 7c and 7e: apply its own **externals** rule
   (`node:*` external on the server, hard error on the client — constraint 15) and its own
   extension policy (`.ts`/`.tsx` are first-party; third-party packages ship `.js`/`.mjs`).
 
@@ -156,7 +156,7 @@ loading"]`, and in the resolver feature list: "No default extensions / No folder
 ```
 
 `→ SKIP*` — step 3 is redundant given `ESM_RESOLVE` step 2 for _prefixed_ specifiers, but
-it is what makes **unprefixed** builtins (`import "fs"`) resolve in Node. Ursprung should
+it is what makes **unprefixed** builtins (`import "fs"`) resolve in Node. ursprung should
 keep an equivalent check, but keyed on its own externals policy rather than Node's builtin
 list. See §7.4 for why unprefixed builtins matter on workerd.
 
@@ -167,7 +167,7 @@ Three steps in this routine are **not** skippable even though they look legacy:
   Exported_ — it does **not** fall through to `main`. `exports` is an on/off switch for
   encapsulation `[S2 §"Package entry points"]`.
 - **10f (`main`) is load-bearing for real ESM-only packages.** `signal-polyfill@0.2.2` —
-  one of Ursprung's three locked dependencies (constraint 6) — has no `exports` field at
+  one of ursprung's three locked dependencies (constraint 6) — has no `exports` field at
   all: `{"type": "module", "main": "dist/index.js", "types": "dist/index.d.ts"}` `[S16]`.
   So does `node-fetch@3.3.2` `[S16]`. **Do not skip `main`.**
 - **10g (bare subpath, no `exports`) is load-bearing too.** With `signal-polyfill`,
@@ -456,7 +456,7 @@ a `{"type":"commonjs"}` marker in a `dist/cjs/` subdirectory `[S2 §"`type`"]`.
 
 ### 2.10 The skip list, consolidated
 
-| Feature                                                                | Why it exists          | Verdict for Ursprung v0                                      |
+| Feature                                                                | Why it exists          | Verdict for ursprung v0                                      |
 | ---------------------------------------------------------------------- | ---------------------- | ------------------------------------------------------------ |
 | Extension probing (`.js`/`.json`/`.node`)                              | `require()` only       | **skip** `[S1][S2]`                                          |
 | Directory index / folders-as-modules (`./dir` → `./dir/index.js`)      | `require()` only       | **skip** `[S1][S2]`                                          |
@@ -467,7 +467,7 @@ a `{"type":"commonjs"}` marker in a `dist/cjs/` subdirectory `[S2 §"`type`"]`.
 | `.wasm` / addon module formats                                         | Node features          | **skip**                                                     |
 | `data:` URL specifiers                                                 | Node feature           | **skip** (or hard-error)                                     |
 | `--experimental-package-map` (Node `main` only) `[S2 §"Package maps"]` | unreleased Node        | **skip**                                                     |
-| `PACKAGE_RESOLVE` step 3 builtin check                                 | unprefixed `node:`     | **replace** with Ursprung's externals rule (§7.4)            |
+| `PACKAGE_RESOLVE` step 3 builtin check                                 | unprefixed `node:`     | **replace** with ursprung's externals rule (§7.4)            |
 | `main` field (step 10f)                                                | pre-`exports` packages | **KEEP** — `signal-polyfill` needs it                        |
 | Bare subpath without `exports` (step 10g)                              | pre-`exports` packages | **KEEP** — cheap, same reason                                |
 | `imports` / `#` specifiers                                             | live ESM feature       | **KEEP** — `chalk`                                           |
@@ -478,7 +478,7 @@ a `{"type":"commonjs"}` marker in a `dist/cjs/` subdirectory `[S2 §"`type`"]`.
 | Encapsulation errors (_Package Path Not Exported_)                     | correctness            | **KEEP** — required to produce constraint-14-shaped errors   |
 
 The kept set is roughly 250–350 lines of TypeScript. There is no smaller correct subset:
-every "KEEP" above is exercised by a package Ursprung already depends on or by one in the
+every "KEEP" above is exercised by a package ursprung already depends on or by one in the
 top tier of npm.
 
 ---
@@ -597,7 +597,7 @@ I could **not** find any evidence that `workerd` itself performs `package.json`/
 resolution. Everything I read points the other way: a deployed Worker is a flat set of
 named modules, and all `node_modules` resolution happens in wrangler's esbuild pass
 `[S7][S8]`. Treat "does workerd resolve packages?" as **unestablished but almost certainly
-no** — and irrelevant under constraint 10, since Ursprung emits one self-contained file.
+no** — and irrelevant under constraint 10, since ursprung emits one self-contained file.
 
 ### 4.5 What browsers and bundlers conventionally use
 
@@ -614,7 +614,7 @@ import|require}`; main fields `browser, module, main` with the special rule that
   `['module', 'node', 'development|production']` (`defaultServerConditions`) — **except**
   that for `ssr.target === 'webworker'` it uses the _client_ list,
   `['module', 'browser', 'development|production']` `[S15]`. That is a direct precedent
-  for Ursprung's server target using `browser` rather than `node`.
+  for ursprung's server target using `browser` rather than `node`.
 - **Browsers themselves have no condition mechanism.** Import maps have no conditional
   branch; the browser only sees whatever the bundler emitted. `browser` is a bundler
   condition, and the Runtime Keys report explicitly declines to cover browsers `[S6]`.
@@ -633,7 +633,7 @@ Keys registry. The only first-party definition I found is esbuild's `[S14]`:
 > … unlike `import`, the `module` condition is always active even if the import path was
 > loaded using a `require` call.
 
-For Ursprung — which only ever imports, never requires — `module` is nearly redundant with
+For ursprung — which only ever imports, never requires — `module` is nearly redundant with
 `import`. The one case it buys us is a package that offers `{"module": <esm>, "default":
 <cjs>}` with no `import` key; without `module` we would land on `default` → CJS → hard
 error under constraint 14, even though an ESM build exists on disk. `tslib@2.8.1` is close
@@ -654,7 +654,7 @@ presentation only — it is the conventional most-specific-first order and is wh
 be written in docs and diagnostics, but changing it changes nothing. Precedence is owned
 by the package author's key order.
 
-#### Server target (Ursprung server bundle, running on workerd)
+#### Server target (ursprung server bundle, running on workerd)
 
 ```
 ["workerd", "worker", "browser", "module", "production", "import"]
@@ -691,7 +691,7 @@ Deliberately **excluded**, each for a reason worth recording:
   `react-dom` maps `edge-light` and `workerd` to the same file `[S16]`) but it is a
   _different_ registered runtime key `[S5]` and claiming it is a lie about our identity.
 
-#### Client target (Ursprung route bundle, running in a browser)
+#### Client target (ursprung route bundle, running in a browser)
 
 ```
 ["browser", "module", "production", "import"]
@@ -717,7 +717,7 @@ Conditions Definitions"]`, reachable only via `--conditions`/`-C`.
   `development` key sits _after_ `default` inside each branch and is therefore
   **unreachable** — its dev builds are effectively dead in a spec-conformant resolver.
   `solid-js` puts `development` first and it works. Do not assume packages get this right.
-- Vite's convention is to always set exactly one of the two `[S15]`. Ursprung should do
+- Vite's convention is to always set exactly one of the two `[S15]`. ursprung should do
   the same, and since constraint 11 rules out a dev mode, that one is `production`.
 
 ---
@@ -741,7 +741,7 @@ All manifests below were extracted from published tarballs, preserving key order
 
 **(b) String sugar** — `strip-ansi@7.2.0`: `{"type": "module", "exports": "./index.js"}`.
 
-**(c) No `exports` at all** — `signal-polyfill@0.2.2` (**Ursprung's own dependency**) and
+**(c) No `exports` at all** — `signal-polyfill@0.2.2` (**ursprung's own dependency**) and
 `node-fetch@3.3.2`:
 
 ```json
@@ -765,7 +765,7 @@ reached. **They are not CJS-only packages** and must not be rejected.
 
 ### 5.2 The awkward ones
 
-**`capnweb@0.10.0` — a locked Ursprung dependency `[S16]`:**
+**`capnweb@0.10.0` — a locked ursprung dependency `[S16]`:**
 
 ```json
 "main": "dist/index.js",
@@ -780,7 +780,7 @@ reached. **They are not CJS-only packages** and must not be rejected.
   "require": "./dist/index.cjs" } }
 ```
 
-Correctly ordered: `workerd` first. **Ursprung must send `workerd` on the server target or
+Correctly ordered: `workerd` first. **ursprung must send `workerd` on the server target or
 it silently gets the generic build.** Note `capnweb` also exercises nested conditions and
 the `types`-first convention.
 
@@ -878,7 +878,7 @@ Correct behaviour, unhelpful message. Real cost of the `browser`-in-server-set d
 
 `path-to-regexp` is the interesting one: it is not CJS-only, but the _only_ pointer to its
 ESM build is the bundler-convention `module` **field**, which Node's algorithm never
-reads (§2.2). Ursprung would classify it CJS-only and hard-error — correctly, per its own
+reads (§2.2). ursprung would classify it CJS-only and hard-error — correctly, per its own
 rules, but a user will find that surprising.
 
 ---
@@ -919,7 +919,7 @@ redeclaration of `require`/`module`/`exports`/`__filename`/`__dirname` `[S1][S2 
 detection"]`. Its stability index is "1.2 — Release candidate" `[S2]`, and it has been on
 by default since v22.7.0/v20.19.0.
 
-Two options for Ursprung:
+Two options for ursprung:
 
 - **Conservative (recommended for v0):** `AMBIGUOUS` ⇒ CJS ⇒ hard error. This is Node's
   own _documented_ default for `.js` ("If the nearest parent `package.json` lacks a `type`
@@ -928,7 +928,7 @@ Two options for Ursprung:
 "module"` is rejected. Node's own guidance backs the rejection: "package authors should
   always include the `type` field in their `package.json` files, even in packages where
   all sources are CommonJS" `[S2]`.
-- **Permissive:** run syntax detection. Ursprung already has a parser (constraint 8), so
+- **Permissive:** run syntax detection. ursprung already has a parser (constraint 8), so
   the marginal cost is one parse of a file that will be parsed anyway. But constraint 8's
   parser has no scope model, and the "top-level lexical redeclaration of `require`" clause
   needs one. Partial detection would be _silently_ wrong on exactly the ambiguous cases.
@@ -1029,7 +1029,7 @@ modules and returns the entry file `[S8]`. And wrangler warns explicitly `[S8]`:
 > want to polyfill Node.js built-ins and disable Wrangler's bundling, please polyfill as
 > part of your own bundling process."
 
-**Consequence for Ursprung.** The map's destination says the demo app "deploys to
+**Consequence for ursprung.** The map's destination says the demo app "deploys to
 Cloudflare through Wrangler with bundling disabled". Under that setup the _only_ `node:*`
 modules that resolve at runtime are the natively-implemented ones and the stubs in §7.2.
 Anything unenv-only fails at Worker startup, not at build time. Constraint 15's parenthesis
@@ -1044,7 +1044,7 @@ canonical unprefixed list ships as `nonPrefixedNodeModules` in
 — 76 entries including subpaths like `fs/promises`, `stream/web`, `util/types`,
 `path/posix` `[S9]`.
 
-**Ursprung's externals rule must cover both spellings.** Matching only `/^node:/` misses
+**ursprung's externals rule must cover both spellings.** Matching only `/^node:/` misses
 `import fs from "fs"`, which is legal under v2 and which many published packages still
 write. Recommend: treat a specifier as a Node builtin if it starts with `node:` **or** is
 an exact member of the `nonPrefixedNodeModules` list, and — for the server target —
@@ -1133,7 +1133,7 @@ lookup misses, do one case-insensitive scan purely to produce a better error ("n
 
 ### 8.3 Percent-encoding and URL-vs-path
 
-Node's algorithm is specified over **URLs**, not strings. Ursprung will almost certainly
+Node's algorithm is specified over **URLs**, not strings. ursprung will almost certainly
 key the virtual filesystem by path strings, which loses:
 
 - `ESM_RESOLVE` step 7a's rejection of `%2F`/`%5C` `[S1]` — keep it, as a specifier-level
@@ -1142,7 +1142,7 @@ key the virtual filesystem by path strings, which loses:
   `PACKAGE_TARGET_RESOLVE` steps 1b and 1f `[S1]` — these are what stop
   `"./%2E%2E/secret.js"` from escaping the package. If we work in raw paths, decode before
   the segment check or reject any specifier/target containing `%`.
-- `?query` and `#fragment` — meaningful in Node (step 7d preserves them). Ursprung should
+- `?query` and `#fragment` — meaningful in Node (step 7d preserves them). ursprung should
   reject them on third-party specifiers rather than half-support them.
 
 ### 8.4 Things a real filesystem gives you that a virtual one does not
@@ -1211,7 +1211,7 @@ workerd (no OS path limits apply to an in-memory map) — unlike Windows' 260-ch
 
 ---
 
-## Implications for Ursprung
+## Implications for ursprung
 
 Ordered by how much they bite. Items 1–3 are conflicts or gaps against the locked
 constraints; the rest are decisions the spec needs to state.
@@ -1221,7 +1221,7 @@ Constraint 15 says `node:*` imports are "external on the server (`nodejs_compat`
 them)". But the unenv polyfills that make most of npm's Node usage work are injected by
 **wrangler's esbuild pass** `[S8][S11]`, and the map's destination deploys "with bundling
 disabled", which skips esbuild entirely `[S8]`. Wrangler even warns about the combination
-in so many words `[S8]`. Under Ursprung's intended deployment, the only `node:*` that
+in so many words `[S8]`. Under ursprung's intended deployment, the only `node:*` that
 resolve are the natively-implemented modules and stubs in §7.2 — a _much_ smaller set than
 "`nodejs_compat`". This does not break the constraint, but the spec must say which set it
 means, and the build should probably validate server-side `node:*` externals against the
@@ -1269,10 +1269,10 @@ the condition set we sent and the keys the package offered — `preact` has no `
 all `[S16]`, so this is a real failure mode, not a hypothetical.
 
 **7. Self-referencing is not optional for us.** Constraint 5's subpath exports mean
-Ursprung's own modules will import `ursprung/client` and friends by name; that path runs
+ursprung's own modules will import `ursprung/client` and friends by name; that path runs
 through `PACKAGE_SELF_RESOLVE` `[S1][S17]`. Also worth flagging against constraint 5: the
-published `ursprung` package points `exports` at `./src/index.ts` `[S17]`, so _Ursprung's
-own resolver would classify Ursprung as an unknown extension_ under §6.1 step 5. Whatever
+published `ursprung` package points `exports` at `./src/index.ts` `[S17]`, so _ursprung's
+own resolver would classify ursprung as an unknown extension_ under §6.1 step 5. Whatever
 `.ts`-handling rule the resolver gets for first-party modules must also apply to the
 `ursprung` package itself when the demo app resolves it.
 

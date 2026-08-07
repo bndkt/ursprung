@@ -1,6 +1,6 @@
 ---
 title: "Written from scratch, for agents"
-description: "Ursprung's primary users are meant to be AI agents, which licenses design decisions that would be unreasonable to ask of a human developer."
+description: "ursprung's primary users are meant to be AI agents, which licenses design decisions that would be unreasonable to ask of a human developer."
 date: "2026-08-07"
 ---
 
@@ -14,13 +14,13 @@ Stating that gap plainly is the honest way to start. What follows is the argumen
 
 The reason a bundler is a large program is that a general-purpose bundler is general-purpose. It cannot know what it is compiling, so it has to handle stylesheets, images, three module systems, a decade of browser targets, and every configuration anyone ever needed. Most of that size is optionality.
 
-Ursprung's bundler starts from a single entry point — the configuration file — discovers the route tree from there, and walks the dependency graph. It knows exactly what it is looking at: a TypeScript application written against Ursprung. That knowledge is what lets it be small. It parses TypeScript, strips erasable syntax, understands ESM, builds one module graph, splits that graph into a server bundle and one bundle per route, and generates RPC stubs where a client module imports from a server module. Stylesheets are not in that list, and neither is any other asset pipeline. Anything outside the list needs a concrete architectural reason to get in.
+ursprung's bundler starts from a single entry point — the configuration file — discovers the route tree from there, and walks the dependency graph. It knows exactly what it is looking at: a TypeScript application written against ursprung. That knowledge is what lets it be small. It parses TypeScript, strips erasable syntax, understands ESM, builds one module graph, splits that graph into a server bundle and one bundle per route, and generates RPC stubs where a client module imports from a server module. Stylesheets are not in that list, and neither is any other asset pipeline. Anything outside the list needs a concrete architectural reason to get in.
 
 Each of the project's constraints is really a deletion. ESM only means no interop layer. Erasable TypeScript syntax only means no general-purpose TypeScript compiler — no `enum` lowering, no namespace emit, no downlevel anything, just removing type syntax and leaving the JavaScript as close to untouched as possible. Latest platform capabilities only means no transpilation targets and no polyfills. The bet is that the sum of those deletions is the difference between a project that can be written from scratch and one that cannot.
 
 ## The part that is actually new
 
-Own bundler, no virtual DOM, resumability, signals — none of that is unprecedented. The idea doing the real work in Ursprung is that the framework's first-class users are AI agents rather than human developers.
+Own bundler, no virtual DOM, resumability, signals — none of that is unprecedented. The idea doing the real work in ursprung is that the framework's first-class users are AI agents rather than human developers.
 
 That sounds like positioning until you notice what it licenses. A framework designed for humans has to economise on the user's patience. Verbosity is a cost, repetition is a cost, and ceremony that a person has to type every time is the thing frameworks compete to remove. Magic — inference, convention, implicit behaviour — is how you buy that economy, and you pay for it with hidden complexity in the implementation and a system that is harder to reason about from the outside.
 
