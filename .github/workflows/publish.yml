@@ -3,9 +3,22 @@ name: Publish
 on:
   release:
     types: [published]
+  # A failed publish must be retryable without burning a version number. A
+  # release that never reached the registry can be re-run against its existing
+  # tag; `inputs.tag` is empty on a release event, so the `||` picks up the
+  # release's own tag there.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing release tag to publish, e.g. v0.0.4
+        required: true
+        type: string
 
 concurrency:
-  group: npm-publish-${{ github.event.release.tag_name }}
+  # `concurrency` cannot see job-level `env`, so the fallback is spelled out
+  # again here. Without it every manual run would key on an empty string and
+  # collapse into a single group.
+  group: npm-publish-${{ inputs.tag || github.event.release.tag_name }}
   cancel-in-progress: false
 
 jobs:
@@ -22,9 +35,14 @@ jobs:
       # publish credential and signs the provenance attestation with. Without
       # it `npm publish` cannot authenticate and cannot attach provenance.
       id-token: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
     steps:
+      # Explicit ref: a manual re-run has no release payload to check out from.
       - name: Check out repository
         uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
 
       - name: Set up Bun
         uses: oven-sh/setup-bun@v2.2.0
@@ -62,8 +80,6 @@ jobs:
       # it has to agree with the version actually going to the registry.
       - name: Verify release tag matches package version
         working-directory: packages/ursprung
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           PACKAGE_VERSION="$(npm pkg get version --workspaces=false | tr -d '"')"
           echo "release tag: $RELEASE_TAG / package version: $PACKAGE_VERSION"
@@ -72,6 +88,14 @@ jobs:
       # `--provenance` and `--access public` are redundant with the
       # `publishConfig` block in the package manifest, and are repeated here so
       # the workflow reads as the complete story of what gets published.
+      #
+      # `--loglevel verbose` is deliberate. npm answers an unauthorised write
+      # with a bare `E404` — the same code as a genuinely missing package — so
+      # at the default level a rejected publish is indistinguishable from a
+      # typo. Verbose shows whether npm attempted the OIDC token exchange with
+      # the registry at all, which is the one fact that separates "trusted
+      # publisher config does not match" from "npm never tried to use it".
+      # This step runs a handful of times a year; the noise is worth it.
       - name: Publish package
         working-directory: packages/ursprung
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --loglevel verbose
