@@ -4,12 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun --hot src/index.ts",
-    "start": "bun src/index.ts",
+    "deploy": "wrangler deploy --experimental-new-config",
+    "dev": "wrangler dev --experimental-new-config",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "ursprung": "workspace:*"
+  },
+  "devDependencies": {
+    "@cloudflare/config": "^0.4.0",
+    "wrangler": "^4.119.0"
   }
 }

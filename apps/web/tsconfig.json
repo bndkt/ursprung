@@ -1,4 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src"]
+  "compilerOptions": {
+    // Workers runtime, not Bun: the ambient globals come from the generated
+    // `worker-configuration.d.ts` instead of `@types/bun`.
+    "types": []
+  },
+  "include": ["src", "cloudflare.config.ts", "worker-configuration.d.ts"]
 }

@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-All commands run from the repo root unless noted. Bun is the only toolchain — there is no Node, npm, or bundler step.
+All commands run from the repo root unless noted. Bun is the only toolchain for
+installing, testing and typechecking — there is no npm step. The one bundler in
+the repo is Wrangler's, and it only runs when the Worker is served or deployed.
 
 ```bash
 bun install                      # install; also links the workspace symlinks
@@ -16,8 +18,8 @@ bun run lint                     # oxlint
 bun run lint:fix                 # oxlint with autofix
 bun run fmt                      # oxfmt, rewrites files in place
 bun run fmt:check                # oxfmt in check-only mode (use in CI)
-bun run dev                      # ursprung-web with --hot reload on :3000
-bun run start                    # ursprung-web without reload
+bun run dev                      # ursprung-web in `wrangler dev` on :8787
+bun run deploy                   # deploy ursprung-web to Cloudflare
 bun run skills:update            # update .agents/skills from skills-lock.json sources
 ```
 
@@ -33,16 +35,42 @@ Bun workspace monorepo, two members declared in the root `package.json`
   `version`, read from its own `package.json` via a JSON import
   (`import pkg from "../package.json" with { type: "json" }`). The manifest is
   the single source of truth for both values; do not hardcode them in `src/`.
-- **`apps/web`** (`ursprung-web`) — a `Bun.serve` HTTP server that imports
-  `ursprung` and surfaces those values on `/` and `/health`. Port comes from
-  `PORT`, default 3000.
+- **`apps/web`** (`ursprung-web`) — a Cloudflare Worker. `src/index.ts` is the
+  whole thing: it imports `ursprung` and default-exports a module Worker whose
+  `fetch` handler answers every request with `${name} v${version}`.
+
+### The Worker is configured in TypeScript, not JSON
+
+`apps/web/cloudflare.config.ts` is Wrangler's **experimental** TypeScript config
+format — a `defineWorker({ ... })` default export from `@cloudflare/config`,
+replacing `wrangler.jsonc`. It is opt-in per invocation: every Wrangler command
+needs `--experimental-new-config` (alias `--x-new-config`), which is what the
+`dev` and `deploy` scripts in `apps/web/package.json` pass. Without the flag
+Wrangler looks for `wrangler.jsonc`/`wrangler.toml`, finds nothing, and fails.
+
+Two consequences of it being experimental:
+
+- The format is unstable and undocumented on the Cloudflare docs site; the
+  schema lives in `@cloudflare/config`'s type definitions and Wrangler's
+  `src/experimental-config`. Field names are camelCase (`compatibilityDate`,
+  `entrypoint`), not the snake_case of the JSON format.
+- `wrangler types` does **not** accept `--experimental-new-config`. The only
+  thing that regenerates `apps/web/worker-configuration.d.ts` is starting
+  `wrangler dev`, which rewrites it on boot. It is committed so that
+  typechecking works from a clean clone.
+
+A sibling `wrangler.config.ts` is also read when present; it takes only the
+build/dev tooling keys (`minify`, `alias`, `define`, `dev`, …). Worker-shaped
+settings — name, compatibility date, bindings, triggers — belong in
+`cloudflare.config.ts`, and Wrangler errors if they appear in the other file.
 
 ### The package ships TypeScript source, not a build artifact
 
 `packages/ursprung` has no build step. Its `exports` map points directly at
-`./src/index.ts`, and `apps/web` depends on it with `workspace:*`, so Bun
-resolves and transpiles the `.ts` on import. Consequences worth knowing before
-changing things:
+`./src/index.ts`, and `apps/web` depends on it with `workspace:*`, so whatever
+loads it — Bun for tests, Wrangler's esbuild bundler for the Worker — resolves
+and transpiles the `.ts` on import. Consequences worth knowing before changing
+things:
 
 - Adding a `build` script or pointing `exports` at `dist/` is a real
   architectural change, not a cleanup — it breaks the zero-build dev loop.
@@ -63,6 +91,12 @@ relative imports carry explicit `.ts` extensions (`from "./index.ts"`).
 
 `packages/ursprung/tsconfig.json` includes `package.json` alongside `src` so the
 JSON import typechecks; keep that in `include` if you touch it.
+
+`apps/web/tsconfig.json` is the one workspace that overrides a compiler option:
+`types: []`, because it runs on workerd rather than Bun and `@types/bun`'s
+globals would collide with the Workers ones. Its ambient types — `Env`,
+`ExportedHandler`, the whole runtime — come from `worker-configuration.d.ts`,
+which is why that file and `cloudflare.config.ts` are both in `include`.
 
 The root `tsconfig.json` exists only to typecheck the root-level `*.config.ts`
 files — the workspaces do not `extend` it and it compiles no source.
@@ -106,13 +140,16 @@ own package. A tool reads exactly one config per directory, so do not add an
 `.oxlintrc.json` or `.oxfmtrc.json` beside these — the JSON and TS forms cannot
 coexist, and adding one silently changes which config wins.
 
-`oxfmt` ignores `.agents/skills/**` via `ignorePatterns`: that tree is vendored
-content synced from `skills-lock.json`, so formatting it only creates churn that
-the next `bun run skills:update` discards. It otherwise honours `.gitignore`.
+`oxfmt` ignores two paths via `ignorePatterns`, both for the same reason — a tool
+rewrites them wholesale, so formatting produces a diff that the next regeneration
+throws away. `.agents/skills/**` is vendored content synced from
+`skills-lock.json` by `bun run skills:update`; `**/worker-configuration.d.ts` is
+emitted by `wrangler dev`. It otherwise honours `.gitignore`.
 
 These are npm packages whose bins carry a `#!/usr/bin/env node` shebang, but
 `bun run` substitutes itself for `node`, so the Bun-only toolchain still holds —
-neither tool needs a Node install.
+neither tool needs a Node install. The same is true of `wrangler`, which is why
+`apps/web`'s `dev` and `deploy` scripts invoke it bare rather than through `npx`.
 
 ## Pre-commit hook
 

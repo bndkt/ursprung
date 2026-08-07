@@ -7,8 +7,8 @@
   ],
   "type": "module",
   "scripts": {
+    "deploy": "bun --filter ursprung-web deploy",
     "dev": "bun --filter ursprung-web dev",
-    "start": "bun --filter ursprung-web start",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint",
