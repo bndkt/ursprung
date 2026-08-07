@@ -19,7 +19,7 @@ laptop.
 
 1. Bump `version` in `packages/ursprung/package.json`, commit, and merge to
    `main`.
-2. Create a GitHub Release tagged `v<version>` (so `0.0.4` → tag `v0.0.4`).
+2. Create a GitHub Release tagged `v<version>` (so `0.0.5` → tag `v0.0.5`).
 3. `.github/workflows/publish.yml` runs on `release: published`: it reinstalls
    from the lockfile, runs format/lint/typecheck/test, asserts the tag matches
    the manifest version, and then `npm publish --provenance --access public`.
@@ -39,23 +39,7 @@ npmjs.com under the package's _Settings → Trusted publisher_:
 - the workflow file name (`publish.yml`),
 - the environment (`npm`), matching `environment:` in the job.
 
-Rename or move the workflow and publishing fails with an auth error, not a
-provenance warning. `repository.directory` in the package manifest must also
-keep pointing at `packages/ursprung`, since provenance verification checks the
-manifest's `repository` against where the workflow ran.
-
-### Retrying a failed publish
-
-A publish that fails does not consume the version number — if the tarball never
-reached the registry, the same version can still be published. Re-run the failed
-run from the Actions tab; there is no need to bump the version or cut a second
-release.
-
-Read the failure before retrying. npm answers an unauthorised write with a bare
-`404 Not Found - PUT https://registry.npmjs.org/ursprung`, the same code it uses
-for a package that does not exist, because distinguishing the two would leak
-which private names are taken. On a package that is demonstrably public, that
-404 means **rejected credentials, not a missing package** — check the trusted
-publisher settings above rather than the version number. Provenance is signed
-before the upload and succeeds independently, so a log can show a signed
-Sigstore entry and still have published nothing.
+Renaming or moving the workflow breaks publishing. `repository.directory` in the
+package manifest must also keep pointing at `packages/ursprung`, since
+provenance verification checks the manifest's `repository` against where the
+workflow ran.
