@@ -48,6 +48,29 @@ Decide:
   function's body, its imports, or its closed-over values. Name the check that proves it
   (see ticket 12's enforcement question).
 
+## Established by ticket 07 — read before starting
+
+**This ticket's central question has a proposed answer already, and it did not come from
+here.** Ticket 07 decided that an API route's HTTP methods are declared in the route file,
+mapped to arbitrarily-named exports. The consequence is bigger than the ergonomics that
+motivated it: **the route file names every callable export in one place, which is an
+allowlist** — precisely the thing ticket 01 found capnweb does not have.
+
+So the "explicit opt-in marker versus every export is public" question below may already
+be settled in favour of an allowlist, with the route file as its home rather than a
+per-function marker. Decide whether the same mechanism covers RPC exports reached from a
+Client component, which the route file does **not** currently name — a `.server.ts`
+imported by a `.client.tsx` appears nowhere in the route file. That gap is the live part
+of this question.
+
+One more thing changed under it. The pending constraint 10 amendment splits the server
+into a root entrypoint plus one module per Route, so **"where the endpoint lives" is no
+longer a free choice**: an RPC call arrives at the root, which is the only thing always
+loaded, and must dispatch to a server function that may live in any Route's module. Either
+the root carries a static dispatch table naming every RPC-exposed export — which is the
+allowlist again, in a second place — or it lazily imports the module owning the target.
+Both are answerable; neither was in scope when this ticket was written.
+
 ## Established by ticket 01 — read before starting
 
 [capnweb research](../research/01-capnweb.md) answers this ticket's security question in

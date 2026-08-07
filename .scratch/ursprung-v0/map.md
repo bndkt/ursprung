@@ -56,8 +56,11 @@ and reopening one is a scope change, not a ticket.
    "whatever TypeScript accepts" is not a safe rule.
 9. Every first-party module declares its side: `.server.`, `.client.` or `.shared.`.
    An unsuffixed `.ts`/`.tsx` reached by the graph is a build error.
-10. One self-contained ESM file per bundle. No chunks, no shared extraction, no runtime
-    loader. Duplication across route bundles is accepted. Circular imports are an error.
+10. ⚠️ **Amendment pending — do not design against this without reading Pending
+    amendments below.** As written: one self-contained ESM file per bundle. No chunks, no
+    shared extraction, no runtime loader. Duplication across route bundles is accepted.
+    Circular imports are an error. The maintainer has proposed replacing all of it except
+    the no-loader rule; tickets 12, 14 and 21 are affected and carry their own banners.
 11. No dev server, no HMR, no watch mode. One entry point: `ursprung build`, a pure
     function from a virtual filesystem to output files.
 12. Streaming SSR in v0, **in-order only**. An async component blocks the stream at its

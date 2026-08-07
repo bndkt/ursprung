@@ -51,9 +51,28 @@ Decide:
   `wrangler.config.ts`, alongside `build: { command, cwd, watchDir }` and
   `assetsDirectory`. **The ticket's original main risk did not materialise.**
 - Under `noBundle` the entrypoint is uploaded byte-for-byte and imports are **not**
-  followed. Ursprung must emit fully type-stripped, import-resolved JavaScript, and the
-  one-file-per-bundle rule is what makes this safe — there is no default module rule for
-  `.js`, so sibling files would be silently dropped.
+  followed. `findAdditionalModules` walks the **filesystem** under `moduleRoot`, matching
+  module rules — not the import graph. `DEFAULT_MODULE_RULES` covers only Text, Data and
+  CompiledWasm, so **there is no default rule for `.js`** and sibling modules are silently
+  omitted from the upload, producing a Worker that 500s at runtime with no warning.
+
+  > **The implication flipped 2026-08-07.** This used to read "the one-file-per-bundle
+  > rule is what makes this safe". Under the pending constraint 10 amendment Ursprung
+  > deliberately emits **many** server modules, so safety now comes from setting the rule
+  > explicitly, and `rules`, `baseDir` and `preserveFileNames` become part of this
+  > contract rather than fields we never touch. Ticket 05 already verified the mechanism
+  > works — `rules: [{ type: "ESModule", globs: ["**/*.js"] }]` attached `lib.js` and
+  > `nested/deep.js`, and `wrangler dev` resolved them — so this is a contract to write,
+  > not a risk to research.
+
+- **Module naming under `noBundle` is predictable and unhashed**: names are
+  `path.relative(moduleRoot, file)` with nested directories preserved, and `moduleRoot`
+  defaults to the entrypoint's own directory, overridable via `baseDir`. Anything outside
+  the module root cannot be named and is not collected — which constrains the output
+  layout this ticket designs. **Relative specifiers resolve against the module's own name
+  inside the uploaded set**, verified by running `wrangler dev`.
+- There is **no JSON rule type**. A `.json` file ships as `Text` and is `JSON.parse`d, or
+  is inlined into the JavaScript. Relevant if the manifest question below lands on a file.
 - Asset settings straddle both config files, and **`runWorkerFirst` is required** or
   browser navigations are answered by `not_found_handling` and never reach the Worker,
   which would silently break streaming SSR.

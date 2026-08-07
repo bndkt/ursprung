@@ -225,15 +225,21 @@ from the Config file costs nothing. Either form now works; ticket 08 picks on
 taste. Written as a path string because the bundler reads the tree from the AST
 rather than evaluating it, and a string says so honestly.
 
-### 19. Lazy thunks describe a laziness the output does not have
+### 19. ~~Lazy thunks describe a laziness the output does not have~~ — withdrawn
 
-→ **tickets 08, 14**
+→ **ticket 08** (the two sub-questions below still stand)
 
-New, and a direct consequence of the decision. Constraint 10 forbids a runtime
-loader, so `() => import("./src/root.server.tsx")` is **never called as
-written** — the bundler rewrites each thunk at emit into a direct reference
-inside the bundle. The source is honest about build-time intent and misleading
-about runtime behaviour, and ticket 14 owns the rewrite.
+> **Withdrawn later the same day.** This said the thunks are "never called as
+> written" because constraint 10 forbids a runtime loader. The maintainer has
+> since proposed emitting a module graph on both sides, linked by workerd's
+> registry and the browser's module map. Ursprung still ships no loader — the
+> hosts have their own — so the thunks stay **real dynamic imports** and the
+> laziness is genuine at runtime. See the map's Pending amendments.
+
+Originally: constraint 10 forbids a runtime loader, so
+`() => import("./src/root.server.tsx")` is never called as written — the bundler
+rewrites each thunk at emit into a direct reference inside the bundle. The
+source is honest about build-time intent and misleading about runtime behaviour.
 
 Two sharp sub-questions for ticket 08:
 

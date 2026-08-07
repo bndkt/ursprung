@@ -85,11 +85,16 @@ route's component into **every** Route bundle. Constraint 10 accepts duplication
 bundles; it does not accept every bundle being the whole application. The specifier stays
 a string literal in the AST, so nothing is evaluated and constraint 8 holds.
 
-Two consequences worth carrying forward. It **dissolves most of NOTES #10** — the Config
-file and route file no longer transitively import every Client module, so colouring is no
-longer stressed by the route file at all. And because constraint 10 forbids a runtime
-loader, **these thunks are never called as written**: ticket 14 rewrites each into a
-direct reference at emit, so the source describes a laziness the output does not have.
+It **dissolves most of NOTES #10** — the Config file and route file no longer transitively
+import every Client module, so colouring is no longer stressed by the route file at all.
+
+> **Superseded later the same day.** This answer originally said the thunks are "never
+> called as written" because constraint 10 forbids a runtime loader, and that ticket 14
+> would rewrite each into a direct reference at emit. **That is no longer true.** The
+> maintainer has since proposed emitting a module graph on both sides, linked by workerd's
+> registry and the browser's module map, so the thunks stay **real dynamic imports** and
+> the laziness is genuine at runtime. See the map's Pending amendments. If ticket 27 comes
+> back negative on workerd dynamic import, the original claim returns for the server only.
 
 ### API routes: methods declared in the route file
 

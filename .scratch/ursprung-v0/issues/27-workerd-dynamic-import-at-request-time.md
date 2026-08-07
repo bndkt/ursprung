@@ -20,19 +20,30 @@ Do not answer this from recollection. The map has already been bitten once by a
 plausible derived conclusion (ticket 01's registry key-order trap); treat anything not
 read from a primary source as unestablished.
 
-### Established already, do not re-research
+### Established already — do NOT re-research
 
-Confirmed this session against developers.cloudflare.com:
+**The whole upload-and-linking half is already answered by
+[ticket 05](./05-wrangler-experimental-config-and-build-contract.md)**, from Wrangler's
+source plus verified `wrangler dev` runs. It is stronger evidence than the public docs.
+Read [`research/05-wrangler.md`](../research/05-wrangler.md) before starting.
 
-- Additional modules **can** be uploaded alongside the entrypoint via `rules`
-  (`type: "ESModule"`, `globs`), "making these modules available to be imported when your
-  Worker is invoked".
-- `find_additional_modules` walks the tree below `base_dir` and **defaults to `true` when
-  `no_bundle` is `true`** — which is Ursprung's configuration per ticket 05.
-- `preserve_file_names` defaults to **false**, and Wrangler then prepends a content hash
-  to each module's name (`34de60b4…-favicon.ico`). Emitted import specifiers would not
-  survive that, so this almost certainly must be `true`. Confirm it.
-- The Worker startup limit is **1 second** since 2025-10-10, raised from 400 ms.
+- Multi-module upload under `noBundle` **works**. `rules: [{ type: "ESModule", globs:
+  ["**/*.js"] }]` attached `lib.js` and `nested/deep.js`, and **relative specifiers
+  resolved against the module's own name inside the uploaded set** — verified by running
+  it, not inferred.
+- `findAdditionalModules` walks the **filesystem**, not the import graph. So a
+  dynamically-imported module is collected by glob like any other, and ticket 05's
+  "imports are not followed" finding is **not** an obstacle here.
+- Module names are `path.relative(moduleRoot, file)`, nested directories preserved,
+  **not content-hashed** under this path. An earlier draft of this ticket claimed
+  `preserve_file_names` would mangle them; that claim came from the public docs describing
+  the *bundling* path and is **withdrawn** — ticket 05 observed unhashed names directly.
+- `rules`, `baseDir`, `findAdditionalModules` and `preserveFileNames` are all available on
+  `wrangler.config.ts`, so none of this needs the JSON config format.
+- The Worker startup limit is **1 second** since 2025-10-10, raised from 400 ms
+  (developers.cloudflare.com).
+
+What is left is genuinely only the **runtime** half, below.
 
 ### What to establish
 
@@ -53,9 +64,8 @@ Confirmed this session against developers.cloudflare.com:
   safe if the registry guarantees a single instance. If it does not, two Route modules
   importing the signal polyfill get two disjoint graphs and the failure is silent —
   exactly what ticket 02 found on the client.
-- Does `no_bundle` upload interact with dynamic import at all — are dynamically-imported
-  modules discovered by `find_additional_modules`, given imports are **not** followed
-  (ticket 05)? Discovery is by glob, so probably yes, but confirm.
+Do **not** spend effort on upload, module naming, or specifier resolution — see the block
+above. If the runtime answer is yes, this ticket is short.
 
 Write the findings to `.scratch/ursprung-v0/research/27-dynamic-import.md`, citing the
 source for each claim, and mark clearly anything read from source code rather than docs.

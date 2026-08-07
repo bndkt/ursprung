@@ -56,11 +56,10 @@ export default defineRoutes([
 //   not obviously Server-side code at all — hence `routes.ts`, unsuffixed, in
 //   this variant. Whether that is legal under constraint 9 is exactly #12, and
 //   this variant is the one that makes the question answerable rather than moot.
-// - There is **no runtime loader** (constraint 10), so these thunks are never
-//   called as written. The bundler rewrites each one at emit into a direct
-//   reference within the bundle. The source therefore describes a laziness the
-//   output does not have — honest about build-time intent, misleading about
-//   runtime behaviour.
+// - ~~There is no runtime loader (constraint 10), so these thunks are never
+//   called as written.~~ **No longer true** — constraint 10 has a pending
+//   amendment: both hosts link a real module graph, so the thunks stay real
+//   dynamic imports. See the map's Pending amendments.
 // - `.then((m) => m.readBuild)` is a shape the bundler must **pattern-match** to
 //   learn the export name. That is fragile in a way a plain string is not.
 //
