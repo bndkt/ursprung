@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## The name is lowercase
+
+**ursprung** is always written lowercase — in prose, in headings, in UI copy, in
+commit messages, in `<title>` tags, at the start of a sentence. Never "Ursprung",
+never "URSPRUNG". It matches the package name, so `${name}` from the library can
+be rendered directly as the wordmark.
+
+The one exception is a German sentence quoting the noun itself, where the
+language capitalises every noun — but that is quoting the word, not naming the
+project, and it has not come up yet.
+
 ## Commands
 
 All commands run from the repo root unless noted. Bun is the only toolchain for
@@ -40,7 +51,9 @@ Bun workspace monorepo, two members declared in the root `package.json`
   the single source of truth for both values; do not hardcode them in `src/`.
 - **`apps/web`** (`ursprung-web`) — a Cloudflare Worker. `src/index.ts` is the
   whole thing: it imports `ursprung` and default-exports a module Worker whose
-  `fetch` handler answers every request with `${name} v${version}`. Requests that
+  `fetch` handler answers every request with the site's index document — an HTML
+  template literal that interpolates `name` and `version` into a version badge
+  and links to the posts index at `/posts/`. Requests that
   match a file under `public/` never reach it — see below.
 
 ### The Worker is configured in TypeScript, not JSON
@@ -89,8 +102,10 @@ key the tooling file accepts.
 
 Routing is Cloudflare's default: a request matching a file under `public/` is
 served from the asset store **without invoking the Worker**, and everything else
-falls through to `fetch`. So `/` still answers `ursprung v<version>` from
-`src/index.ts` while `/posts/` is the blog index. `htmlHandling` is
+falls through to `fetch`. So `/` is still served from `src/index.ts` while
+`/posts/` is the blog index. The two are separate documents that share a look:
+the index document lives in the Worker source and the post list is a static
+asset, so a change to one has to be mirrored by hand in the other. `htmlHandling` is
 `auto-trailing-slash`, which makes `/posts` and `/posts/index.html` both `307`
 to `/posts/`. There is no `ASSETS` binding, because nothing in the Worker needs
 to reach the asset store by hand; adding one means an `env` entry in
@@ -99,12 +114,21 @@ to reach the asset store by hand; adding one means an `env` entry in
 Styling is [Tailwind](https://tailwindcss.com) v4 via its standalone CLI. This is
 the repo's only compile-to-a-file build step, and it is deliberately small:
 
-- `apps/web/src/styles.css` is the input — `@import "tailwindcss"` plus an
-  explicit `@source "../public/**/*.html"`. That `@source` is load-bearing.
-  Tailwind v4 auto-detects source files relative to the stylesheet, which would
-  only ever scan `src/`; the markup lives in `public/`. Globbing `*.html` rather
-  than the whole directory also keeps the generated `public/styles.css` from
-  being scanned as an input to itself.
+- `apps/web/src/styles.css` is the input — `@import "tailwindcss"` plus two
+  explicit `@source` lines and a `@theme` block. `@source "../public/**/*.html"`
+  is load-bearing. Tailwind v4 auto-detects source files relative to the
+  stylesheet, which would only ever scan `src/`; the markup lives in `public/`.
+  Globbing `*.html` rather than the whole directory also keeps the generated
+  `public/styles.css` from
+  being scanned as an input to itself. The second, `@source "./index.ts"`, covers
+  the index document's markup, which is a template literal in the Worker
+  entrypoint rather than a file under `public/`; without it every class used only
+  on `/` is dropped from the output.
+- The `@theme` block sets `--font-sans` and `--font-mono` to system stacks. This
+  site loads **no webfont** and should not start: no `<link>` to a font host, no
+  `@import url()`, no self-hosted `@font-face`. The ui.sh typography guideline
+  says to always use InterVariable; that rule is overridden here on purpose, so
+  do not re-add it when following the skill.
 - `public/styles.css` is the output. It is **gitignored** — `build:css` runs as
   the first step of `dev`, `deploy` and `deploy:preview`, so every environment
   that serves the Worker generates it first. Nothing commits it, and nothing
@@ -115,6 +139,18 @@ the repo's only compile-to-a-file build step, and it is deliberately small:
 
 The consequence worth stating: opening `public/posts/index.html` straight off
 disk gets unstyled HTML until `bun run build:css` has run at least once.
+
+Both documents are styled with the [ui.sh](https://ui.sh) `design` skill's
+guidelines. That skill is installed globally under `$HOME/.claude/skills/design`
+and is not vendored into this repo, so it is not covered by `skills-lock.json` or
+`bun run skills:update`.
+
+The layout of both is one idea taken from the name — an **origin axis**. A single
+hairline runs the full length of the page, the origin is marked at its top with
+the only saturated colour on the site, and every section, and every post, hangs
+off it as a node. Everything else is stone neutrals; amber is spent on the origin
+mark and on focus rings, nowhere else. Adding a section means adding a node, not
+a card.
 
 ### Deployment
 

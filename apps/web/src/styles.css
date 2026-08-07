@@ -6,7 +6,13 @@
    generated `public/styles.css` from being scanned as its own input. */
 @source "../public/**/*.html";
 
+/* The site's index document is a template literal inside the Worker entrypoint
+   rather than a file under `public/`, so name it explicitly too. */
+@source "./index.ts";
+
 @theme {
+  /* System fonts only — no webfont is loaded and none should be. Nothing here
+     leaves the device, so there is no font request to block the first paint. */
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono:
