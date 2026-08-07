@@ -51,11 +51,16 @@ _Avoid_: tainting, marking
 **Server bundle**:
 The single output containing all code that runs on the server, including client modules
 that participate in server rendering.
+_Pending change_: an amendment proposed on 2026-08-07 replaces this with a root
+entrypoint plus one module per route. See `.scratch/ursprung-v0/map.md`, Pending
+amendments. Do not rename anything until that lands.
 
 **Route bundle**:
 The output for one route, loaded by the browser. There is one per route.
 _Avoid_: client bundle (ambiguous — prefer this term when a specific route's output is
 meant), chunk
+_Pending change_: the same amendment makes this an entry module plus shared modules
+rather than one file, and leaves no term for a shared emitted module.
 
 **Type stripping**:
 Removing erasable TypeScript syntax from a module while otherwise preserving its

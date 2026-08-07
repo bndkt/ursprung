@@ -2,10 +2,29 @@
 
 Type: grilling
 Status: open
-Blocked by: 11, 12
+Blocked by: 11, 12, 27
 Map: [Ursprung v0](../map.md)
 
 ## Question
+
+> **Premise changed 2026-08-07 — read the map's Pending amendments first, and treat
+> everything below as historical.** This ticket was written to resolve a contradiction
+> between constraint 8 (no scope model) and constraint 10 (flat self-contained bundles).
+> The maintainer has since proposed emitting **real ESM modules on both sides**, linked by
+> workerd's registry on the server and the browser's module map on the client. Both
+> guarantee one instance per resolved specifier, and neither needs a loader from us.
+>
+> **That dissolves this ticket's central problem rather than answering it.** Real modules
+> get module scope for free, so there is no renaming, no identifier collision, and no
+> scope model needed anywhere. The three options below — IIFE wrappers, prefix renaming,
+> a minimal scope model — all become moot, and constraint 8 stops being in tension with
+> constraint 10 at all.
+>
+> What this ticket becomes: module naming and content hashing, the extraction rule (which
+> modules are reachable from more than one entrypoint), emission ordering and determinism,
+> and how RPC stubs are woven in. Rewrite it once ticket 27 reports; do not work it as
+> written. If 27 comes back negative on workerd dynamic import, only the **server** half
+> reverts and the original framing below applies to the server alone.
 
 Two locked constraints are in tension and this ticket resolves it. Constraint 10: one
 self-contained flat ESM file per bundle, modules concatenated in topological order with

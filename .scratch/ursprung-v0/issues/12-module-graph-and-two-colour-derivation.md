@@ -7,6 +7,23 @@ Map: [Ursprung v0](../map.md)
 
 ## Question
 
+> **Premise changed 2026-08-07 — read the map's Pending amendments first.** This ticket
+> says "the server bundle", singular, throughout. Under the pending constraint 10
+> amendment there is no single server output: the server is a **root entrypoint plus one
+> module per Route**, and on both sides a module reachable from more than one entrypoint
+> is emitted once and shared rather than duplicated.
+>
+> Three questions below change shape rather than disappearing. **"What is a node"** gets
+> easier — a module is emitted once, so the one-node-many-colours framing is closer to
+> right than several nodes. **"Entry points"** grows: there are now server roots plural,
+> and the graph must record which entrypoints reach each module, because that set is
+> exactly what decides whether a module is shared or inlined. **Dynamic `import()` as an
+> edge kind** stops being an afterthought and becomes the primary edge for route
+> references, per ticket 07.
+>
+> The colouring invariant, the 3×3 matrix and the enforcement question are all unaffected.
+> If ticket 27 comes back negative, only the server half reverts.
+
 One unified graph, several outputs. The invariant that matters most in the whole
 framework lives here: **server code never reaches a client bundle**, while client code
 may legitimately appear in the server bundle for SSR. This ticket settles the data model
