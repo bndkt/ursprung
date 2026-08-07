@@ -113,3 +113,30 @@ the next `bun run skills:update` discards. It otherwise honours `.gitignore`.
 These are npm packages whose bins carry a `#!/usr/bin/env node` shebang, but
 `bun run` substitutes itself for `node`, so the Bun-only toolchain still holds —
 neither tool needs a Node install.
+
+## Pre-commit hook
+
+Husky runs `.husky/pre-commit` on every commit: `lint-staged`, then
+`bun run typecheck`, then `bun test`. `bun install` runs the `prepare` script,
+which is how a fresh clone gets `core.hooksPath` pointed at `.husky/_` — there is
+no separate setup step.
+
+`lint-staged.config.ts` formats staged files with `oxfmt` and lints staged source
+with `oxlint`. Formatting is applied and re-staged automatically; a lint error
+fails the commit, since most are not safely auto-fixable. Two details there are
+load-bearing:
+
+- The two globs are **disjoint**. lint-staged runs glob groups concurrently, so
+  a file matching both would be rewritten by oxfmt while oxlint was reading it.
+  Commands within one group run in order, which is what sequences format→lint.
+- `oxfmt` is passed `--no-error-on-unmatched-pattern`. Without it, oxfmt exits
+  non-zero when every path it receives is covered by `ignorePatterns`, so a
+  commit touching only `.agents/skills/**` would fail the hook.
+
+There is deliberately no Prettier here, despite it being the usual lint-staged
+pairing — oxfmt is the formatter, and adding Prettier would mean two tools
+formatting the same files.
+
+Bypass with `git commit --no-verify` when you need to; CI should still run
+`bun run fmt:check`, `bun run lint`, `bun run typecheck` and `bun test`, because
+the hook only ever sees staged files.
