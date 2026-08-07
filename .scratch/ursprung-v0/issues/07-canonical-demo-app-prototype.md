@@ -1,7 +1,7 @@
 # 07 — The canonical demo app, written as if Ursprung v0 already existed
 
 Type: prototype
-Status: open
+Status: claimed
 Blocked by: —
 Map: [Ursprung v0](../map.md)
 
