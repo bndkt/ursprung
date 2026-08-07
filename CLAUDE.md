@@ -20,6 +20,7 @@ bun run fmt                      # oxfmt, rewrites files in place
 bun run fmt:check                # oxfmt in check-only mode (use in CI)
 bun run dev                      # ursprung-web in `wrangler dev` on :8787
 bun run deploy                   # deploy ursprung-web to Cloudflare
+bun run deploy:preview           # upload a version, no production traffic shift
 bun run skills:update            # update .agents/skills from skills-lock.json sources
 ```
 
@@ -78,16 +79,25 @@ The Worker is deployed by [Workers Builds](https://developers.cloudflare.com/wor
 Cloudflare's Git integration, not from a developer machine. It builds on push to
 `main` with these dashboard settings:
 
-| Setting        | Value                                           |
-| -------------- | ----------------------------------------------- |
-| Root directory | `apps/web`                                      |
-| Build command  | _(empty — no build step)_                       |
-| Deploy command | `npx wrangler deploy --experimental-new-config` |
-| `BUN_VERSION`  | `1.3.11` (build variable)                       |
+| Setting                              | Value                     |
+| ------------------------------------ | ------------------------- |
+| Root directory                       | `apps/web`                |
+| Build command                        | _(empty — no build step)_ |
+| Deploy command                       | `bun run deploy`          |
+| Non-production branch deploy command | `bun run deploy:preview`  |
+| `BUN_VERSION`                        | `1.3.11` (build variable) |
+
+Both deploy commands are `apps/web` package scripts rather than inline
+`wrangler` invocations, so the `--experimental-new-config` flag lives in one
+place — the manifest — instead of being duplicated into dashboard fields nobody
+diffs. `deploy` runs `wrangler deploy` (production branch); `deploy:preview`
+runs `wrangler versions upload`, which uploads a version and hands back a
+preview URL without shifting production traffic. Changing either script changes
+what CI does; the dashboard fields should not need editing again.
 
 The root directory has to be `apps/web` rather than the repo root, because
 Wrangler's bin is linked into `apps/web/node_modules/.bin` (Bun links workspace
-member bins there, not at the root) and `npx wrangler` would otherwise miss it.
+member bins there, not at the root) and the scripts resolve it from there.
 Running `bun install` from `apps/web` is still correct — Bun walks up to the
 workspace root, so `ursprung` resolves through the `workspace:*` link.
 

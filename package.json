@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "deploy": "bun --filter ursprung-web deploy",
+    "deploy:preview": "bun --filter ursprung-web deploy:preview",
     "dev": "bun --filter ursprung-web dev",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",

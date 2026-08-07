@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy --experimental-new-config",
+    "deploy:preview": "wrangler versions upload --experimental-new-config",
     "dev": "wrangler dev --experimental-new-config",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
