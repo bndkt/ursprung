@@ -47,8 +47,16 @@ changing things:
 - Adding a `build` script or pointing `exports` at `dist/` is a real
   architectural change, not a cleanup — it breaks the zero-build dev loop.
 - Anything consuming this package must be able to import TypeScript. That holds
-  inside the monorepo; it would not hold for an external npm consumer, which is
-  the constraint to revisit if the package is ever published.
+  inside the monorepo; it does **not** hold for an arbitrary external consumer,
+  and the package _is_ published — every version on npm so far ships
+  `src/index.ts` as its entry point. External users therefore need Bun, a
+  bundler that transpiles dependencies, or a Node new enough to strip types;
+  CommonJS `require()` is out. Adding a build is the fix if that becomes a real
+  complaint, and it is the architectural change described above, not a cleanup.
+- `files` in the manifest is `["src", "!src/**/*.test.ts"]`, so the tarball is
+  the entry point plus `package.json`, `README.md` and `LICENSE`. The `src/`
+  layout is part of the public API — `exports` points into it, so moving files
+  under `src/` is a breaking change for consumers.
 
 ## TypeScript setup
 
@@ -137,6 +145,39 @@ There is deliberately no Prettier here, despite it being the usual lint-staged
 pairing — oxfmt is the formatter, and adding Prettier would mean two tools
 formatting the same files.
 
-Bypass with `git commit --no-verify` when you need to; CI should still run
+Bypass with `git commit --no-verify` when you need to; CI still runs
 `bun run fmt:check`, `bun run lint`, `bun run typecheck` and `bun test`, because
 the hook only ever sees staged files.
+
+## CI and publishing
+
+Two workflows, both Bun-first:
+
+- `.github/workflows/check.yml` — the four checks above, on pushes to `main` and
+  on every PR. No `setup-node`: `bun run` substitutes itself for the `node`
+  shebang on the oxlint, oxfmt and tsc bins.
+- `.github/workflows/publish.yml` — publishes `packages/ursprung` to npm on
+  `release: published`. It runs the same four checks, asserts the release tag
+  equals `v$(version from the manifest)`, then `npm publish --provenance`.
+
+To cut a release: bump `version` in `packages/ursprung/package.json`, merge to
+`main`, then create a GitHub Release tagged `v<version>`. The tag assertion is
+there to catch the common mistake of tagging without bumping.
+
+The publish job is the one place Node and npm appear in this repo, and they earn
+it: `bun publish` cannot mint npm provenance attestations. It installs with
+`bun install --frozen-lockfile` and only shells out to `npm` for the publish
+itself.
+
+Auth is [npm trusted publishing](https://docs.npmjs.com/trusted-publishers) over
+GitHub OIDC — the job's `id-token: write` permission is exchanged for a
+short-lived credential and also signs the provenance attestation. There is no
+`NPM_TOKEN` secret, and adding one would be a step backwards. Four things must
+agree or publishing fails, three of them configured on npmjs.com under the
+package's _Settings → Trusted publisher_:
+
+- the repository, `bndkt/ursprung`;
+- the workflow file name, `publish.yml` — **renaming the file breaks publishing**;
+- the environment name, `npm`, matching `environment:` on the job;
+- `repository.directory` in the manifest, which provenance verification checks
+  against the path the workflow published from.
