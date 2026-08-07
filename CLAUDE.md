@@ -73,10 +73,25 @@ files — the workspaces do not `extend` it and it compiles no source.
 [oxfmt](https://oxc.rs/docs/guide/usage/formatter) from the oxc toolchain, both
 configured with **TypeScript config files, not JSON**:
 
-- `oxlint.config.ts` — default settings: the `typescript`, `unicorn`, and `oxc`
-  plugins with the `correctness` category at `error`.
+- `oxlint.config.ts` — the `typescript`, `unicorn`, `oxc` and `import` plugins
+  with the `correctness` category at `error`, plus six named `import/` rules.
 - `oxfmt.config.ts` — default settings (printWidth 100, 2-space indent,
   semicolons, double quotes, trailing commas, `package.json` key sorting).
+
+Two things about `oxlint.config.ts` are easy to get wrong:
+
+- `plugins` **overwrites** the default set rather than extending it. Adding a
+  plugin means listing every plugin you still want alongside it.
+- The `import` plugin contributes **no rules to `correctness`**, so adding it to
+  `plugins` is a no-op on its own. Every `import/` rule that should run has to be
+  named in `rules`. Enabled today: `no-cycle`, `no-self-import`,
+  `no-mutable-exports`, `no-duplicates`, `no-empty-named-blocks`, `first`.
+
+Import _resolution_ is not oxlint's job here — there is no `import/no-unresolved`
+rule in oxlint, and `import/named` does not fire on missing named exports. `tsc`
+catches both (`TS2307`, `TS2305`) and understands the workspace links, so run
+`bun run typecheck` for that class of error. `import/no-cycle` is the one that
+earns its place: tsc does not report module cycles.
 
 Both take a default export wrapped in `defineConfig`, imported from the tool's
 own package. A tool reads exactly one config per directory, so do not add an
