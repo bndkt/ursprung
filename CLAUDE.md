@@ -317,3 +317,20 @@ package's _Settings → Trusted publisher_:
 - the environment name, `npm`, matching `environment:` on the job;
 - `repository.directory` in the manifest, which provenance verification checks
   against the path the workflow published from.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as markdown files under `.scratch/<feature-slug>/` in this
+repo. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles, used verbatim as `Status:` values. See
+`docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` and `docs/adr/` at the repo root. See
+`docs/agents/domain.md`.
