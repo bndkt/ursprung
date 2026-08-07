@@ -3,11 +3,11 @@
 Type: grilling
 Status: resolved
 Blocked by: 07 (resolved — read the input block below before the questions)
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
-An Ursprung application is defined by a single entry point — the config file — from
+An ursprung application is defined by a single entry point — the config file — from
 which the bundler discovers the route configuration and traverses everything else.
 This ticket settles what those two files actually look like. React to the variants
 prototyped in ticket 07 rather than starting from scratch.

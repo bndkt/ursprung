@@ -3,11 +3,11 @@
 Type: research
 Status: resolved
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
-Constraint 7 means Ursprung resolves real npm packages; constraint 14 means ESM only;
+Constraint 7 means ursprung resolves real npm packages; constraint 14 means ESM only;
 constraint 13 means resolution is a pure read over a virtual filesystem. Ticket 13
 writes our resolution rules. This ticket gathers the algorithm and the platform facts.
 

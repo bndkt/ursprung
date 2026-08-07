@@ -1,4 +1,4 @@
-# THROWAWAY — the canonical demo app, written as if Ursprung v0 existed
+# THROWAWAY — the canonical demo app, written as if ursprung v0 existed
 
 Prototype for [ticket 07](../../issues/07-canonical-demo-app-prototype.md).
 

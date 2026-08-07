@@ -14,4 +14,4 @@ When a skill mentions a role (e.g. "apply the AFK-ready triage label"), use the 
 
 This repo tracks issues as local markdown, so a "label" is the value of the `Status:` line near the top of the issue file — see `issue-tracker.md`.
 
-Edit the right-hand column to match whatever vocabulary you actually use.
+**`/wayfinder` tickets are the exception.** They use the same `Status:` line for a different vocabulary — `open`, `claimed`, `resolved` — because a wayfinder ticket is a question one agent claims and answers, not an issue a maintainer triages. Every ticket under `.scratch/ursprung-v0/` is one of these, so none of them carries a label from the table above. Read the `Type:` line to tell the two apart: if it is present, the ticket is a wayfinder child and the lifecycle vocabulary applies.

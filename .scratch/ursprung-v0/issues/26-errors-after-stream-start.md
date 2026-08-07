@@ -3,7 +3,7 @@
 Type: grilling
 Status: open
 Blocked by: 18
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 Graduated from: [07 — The canonical demo app](./07-canonical-demo-app-prototype.md)
 
 ## Question
@@ -16,7 +16,7 @@ Constraint 12 makes this **structural rather than incidental**. In-order streami
 a Server component deep in the tree runs strictly after its ancestors have been written,
 so by the time any nested route can fail, the response has committed.
 
-Settle what an application author can do, and what Ursprung does when they do nothing:
+Settle what an application author can do, and what ursprung does when they do nothing:
 
 - Can a route declare a status **before** rendering — a check that runs early enough to
   still own the status line — and is that a separate lifecycle from rendering?

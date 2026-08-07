@@ -1,9 +1,9 @@
-# 07 — The canonical demo app, written as if Ursprung v0 already existed
+# 07 — The canonical demo app, written as if ursprung v0 already existed
 
 Type: prototype
 Status: resolved
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
@@ -23,7 +23,7 @@ implementation, no framework code, nothing that runs. Rough is the point.
 
 It must contain, because the destination says so:
 
-- the Ursprung config file, the single entry point the bundler starts from
+- the ursprung config file, the single entry point the bundler starts from
 - a route file declaring a **root route with nested children**
 - an **API route** with handlers for two different HTTP methods
 - a **server component** (`.server.tsx`) that reads something server-only

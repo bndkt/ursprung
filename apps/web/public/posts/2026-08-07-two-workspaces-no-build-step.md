@@ -1,12 +1,12 @@
 ---
 title: "Two workspaces, no build step"
-description: "Ursprung's package ships TypeScript source straight to its consumer, which makes the dev loop instant and makes publishing to npm a problem for later."
+description: "ursprung's package ships TypeScript source straight to its consumer, which makes the dev loop instant and makes publishing to npm a problem for later."
 date: "2026-08-07"
 ---
 
 Most monorepos open with a build pipeline. Before the app can import the library, the library has to be compiled: a `dist/` folder appears, a watcher sits in a second terminal, and everyone learns the hard way which of the two processes they forgot to start when an import comes back `undefined`.
 
-Ursprung does not have that step. `bun run dev` starts the web server, the server imports the `ursprung` package, and the TypeScript in `packages/ursprung/src/index.ts` is transpiled as it loads. There is no build script anywhere in the repo, because there is nothing to build.
+ursprung does not have that step. `bun run dev` starts the web server, the server imports the `ursprung` package, and the TypeScript in `packages/ursprung/src/index.ts` is transpiled as it loads. There is no build script anywhere in the repo, because there is nothing to build.
 
 ## The shape of the thing
 

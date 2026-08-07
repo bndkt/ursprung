@@ -1,13 +1,13 @@
-# 21 — The Ursprung → Wrangler output contract
+# 21 — The ursprung → Wrangler output contract
 
 Type: grilling
 Status: open
 Blocked by: 14, 23, 27
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
-Ursprung owns building; Wrangler owns deploying. The boundary between them is a
+ursprung owns building; Wrangler owns deploying. The boundary between them is a
 directory of files in a deterministic layout. Ticket 05 supplies what Wrangler's
 experimental TypeScript config actually supports; ticket 14 supplies what the bundles
 look like. This ticket writes the contract.
@@ -30,8 +30,8 @@ Decide:
 - **How client bundles are served.** As Wrangler assets, or from the Worker itself?
   If assets: the directory layout, the binding, the routing interaction with the Worker's
   fetch handler, and what happens on a miss.
-- **Whether Ursprung generates the Wrangler config or the author writes it.** The vision
-  says the author's config declares the custom build command that invokes Ursprung — so
+- **Whether ursprung generates the Wrangler config or the author writes it.** The vision
+  says the author's config declares the custom build command that invokes ursprung — so
   the config is an input. But it also has to agree with our output layout on several
   fields. Decide whether that agreement is enforced (we read and validate the config) or
   merely documented, and note that constraint 13 means we cannot assume a real filesystem.
@@ -57,7 +57,7 @@ Decide:
   omitted from the upload, producing a Worker that 500s at runtime with no warning.
 
   > **The implication flipped 2026-08-07.** This used to read "the one-file-per-bundle
-  > rule is what makes this safe". Under the pending constraint 10 amendment Ursprung
+  > rule is what makes this safe". Under the pending constraint 10 amendment ursprung
   > deliberately emits **many** server modules, so safety now comes from setting the rule
   > explicitly, and `rules`, `baseDir` and `preserveFileNames` become part of this
   > contract rather than fields we never touch. Ticket 05 already verified the mechanism

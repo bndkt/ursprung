@@ -59,7 +59,7 @@ construction — the compiler cannot flag anything else under this flag.
 and parameter properties; all seven TS1294s come out of `getSemanticDiagnostics()`. It is
 produced by the checker, in `checkEnumDeclaration`, `checkParameter`,
 `checkModuleDeclaration`, `checkImportEqualsDeclaration`, `checkExportAssignment` and
-`checkAssertion`. Consequence for Ursprung: this check cannot be borrowed cheaply from a
+`checkAssertion`. Consequence for ursprung: this check cannot be borrowed cheaply from a
 parse; it must be reimplemented.
 
 ### The six
@@ -263,7 +263,7 @@ module:
 | `class C { static { } }`                              | parses                                     |
 | `function f(){ using r = { [Symbol.dispose](){} }; }` | parses                                     |
 
-So on Ursprung's only target, decorators and `accessor` are hard runtime syntax errors,
+So on ursprung's only target, decorators and `accessor` are hard runtime syntax errors,
 and `erasableSyntaxOnly` will not catch them.
 
 ### 2.5 `export as namespace Foo;` **[V]**
@@ -271,8 +271,8 @@ and `erasableSyntaxOnly` will not catch them.
 `NamespaceExportDeclaration` is UMD-global syntax. In a `.ts` file TypeScript rejects it
 with **TS1314** ("Global module exports may only appear in module files"), not TS1294. In
 a `.d.ts` it is legal and no TS1294 fires. Both `ts-blank-space` and `amaro` leave it in
-the output verbatim, producing invalid JavaScript **[V]**. Only relevant if Ursprung ever
-reads a `.d.ts`; for `.ts`/`.tsx` inputs TS1314 covers it, but Ursprung must reject it
+the output verbatim, producing invalid JavaScript **[V]**. Only relevant if ursprung ever
+reads a `.d.ts`; for `.ts`/`.tsx` inputs TS1314 covers it, but ursprung must reject it
 itself since it has no checker.
 
 ### 2.6 The `declare` hazard (a semantic hole, not a syntax one)
@@ -448,7 +448,7 @@ explicit constraint."
 `<Comp>hi</Comp>` for `<Comp<string>>hi</Comp>` — the type arguments are erased.
 `ts-blank-space` 0.9.0 leaves them **in place** (its `innerVisitor` has no case for
 `JsxOpeningElement`/`JsxSelfClosingElement` type arguments), producing output that is not
-valid JSX. `amaro` cannot parse `.tsx` at all. Ursprung parses JSX, so it must handle B18
+valid JSX. `amaro` cannot parse `.tsx` at all. ursprung parses JSX, so it must handle B18
 and cannot copy either implementation here.
 
 **Node does not support `.tsx` at all** **[D]** — "`.tsx` files are unsupported". Amaro
@@ -548,7 +548,7 @@ expression."_ Neither reports an error. The cause is that
 `assertionChainWouldChangeBinaryGrouping` only looks for a `BinaryExpression` base;
 `!x`, `-1`, `void 0`, `typeof x` are `PrefixUnaryExpression`, so the guard is skipped.
 Verified for `!x`, `-1`, `void 0`, `typeof x` — all four produce invalid output from both
-tools. **Ursprung should reject a unary base followed by `**`;** copying either
+tools. **ursprung should reject a unary base followed by `**`;** copying either
 implementation reproduces the bug.
 
 ### 5.5 ASI hazards, and the semicolon-injection trick
@@ -654,7 +654,7 @@ output:  const t = /* keep */ 1                      ;
 ```
 
 Note the second example: comments _inside_ a deleted type span are deleted with it, which
-is correct and worth knowing if Ursprung ever wants to preserve directives.
+is correct and worth knowing if ursprung ever wants to preserve directives.
 
 The mechanism is a `BlankString` buffer with four operations **[D]**: `blank(start,end)`,
 `blankButStartWithSemi`, `blankButStartWithOpenParen`, `blankButEndWithCloseParen` — i.e.
@@ -732,7 +732,7 @@ Where the three tools disagree (`ok` = accepted; everything else is an error). A
 | `<Comp<number> />` type args in JSX                  | erased                   | **left in place**                                  | cannot parse `.tsx`            |
 | `.tsx` input                                         | supported                | supported via `blankSourceFile` + `ScriptKind.TSX` | **unsupported**                |
 
-Nobody's list is a superset of anyone else's. Ursprung needs its own, which is what §1–§5
+Nobody's list is a superset of anyone else's. ursprung needs its own, which is what §1–§5
 above are.
 
 ---
@@ -757,7 +757,7 @@ above are.
 
 ---
 
-## Implications for Ursprung
+## Implications for ursprung
 
 Read against the [locked constraints](../map.md). Nothing here breaks a constraint, but
 three of them need a rider.
@@ -773,7 +773,7 @@ _syntactic_ — no type model, no scope model — so the constraint survives. Ti
 budget for them explicitly rather than discovering them.
 
 **Constraint 8's "loud errors on non-erasable constructs" must reject more than
-`erasableSyntaxOnly` does.** The reject list Ursprung needs is TypeScript's six (§1) plus
+`erasableSyntaxOnly` does.** The reject list ursprung needs is TypeScript's six (§1) plus
 five that `erasableSyntaxOnly` permits:
 
 1. legacy decorators, 2. standard decorators, 3. `accessor` — all three are hard
@@ -792,16 +792,16 @@ gets a free answer: a build error's source position in stripped output is the sa
 position as in the original module, so diagnostics can point at the original file without
 any mapping machinery.
 
-**A new requirement on application code that is not yet on the map: Ursprung must demand
-`verbatimModuleSyntax` semantics, and enforce them itself.** With no type model, Ursprung
+**A new requirement on application code that is not yet on the map: ursprung must demand
+`verbatimModuleSyntax` semantics, and enforce them itself.** With no type model, ursprung
 cannot do import elision — so `import { SomeType } from "./x.ts"` (no `type` keyword)
 survives stripping as a live value import of a binding that does not exist at runtime.
 TypeScript catches this as TS1484, but only if the application enables the flag, and
-Ursprung must not depend on the application having run `tsc` at all. This is a build-time
-rule Ursprung has to enforce, and it cannot: detecting it requires knowing whether the
+ursprung must not depend on the application having run `tsc` at all. This is a build-time
+rule ursprung has to enforce, and it cannot: detecting it requires knowing whether the
 imported name is a type, which is exactly the type model constraint 8 rules out. The
 honest resolution is to **document `verbatimModuleSyntax: true` as a hard requirement on
-application `tsconfig.json`** and accept that violating it is an application bug Ursprung
+application `tsconfig.json`** and accept that violating it is an application bug ursprung
 reports only as a runtime failure. Ticket 11 or the spec should say so out loud.
 
 **Consequence for the graph (constraint 10, "one self-contained ESM file per bundle").**
@@ -812,17 +812,17 @@ to `export type * from` versus `export { type A }`.
 
 **Constraint 6 (three dependencies) is unaffected, but note what it costs.** Neither
 `ts-blank-space` (which needs `typescript` as a peer) nor `amaro` (a 2.8 MB wasm blob) can
-be adopted; §3 is the specification Ursprung implements from scratch. That is the intended
+be adopted; §3 is the specification ursprung implements from scratch. That is the intended
 reading of the constraint — this research just makes the size of the work explicit.
 
 **`.tsx` costs almost nothing extra (constraint 8 covers JSX already).** Only two rules
 change (§4): the angle-bracket assertion form does not exist, and a generic arrow needs
-`,` or `extends`. Since `<T>expr` is on the reject list in `.ts` anyway, Ursprung's `.ts`
+`,` or `extends`. Since `<T>expr` is on the reject list in `.ts` anyway, ursprung's `.ts`
 and `.tsx` parsers differ by one disambiguation rule. But **B18 (JSX element type
-arguments) is a delete-span the reference implementation misses**, and Ursprung parses JSX,
+arguments) is a delete-span the reference implementation misses**, and ursprung parses JSX,
 so it must be in ticket 11's list.
 
 **Watch item, not a conflict: `useDefineForClassFields`.** A stripper leaves class fields
 verbatim, which means ECMAScript define semantics. An application whose `tsconfig` sets
-`useDefineForClassFields: false` will behave differently under Ursprung than under `tsc`.
+`useDefineForClassFields: false` will behave differently under ursprung than under `tsc`.
 Worth a line in the spec alongside the `verbatimModuleSyntax` requirement.

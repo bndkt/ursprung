@@ -3,7 +3,7 @@
 Type: grilling
 Status: open
 Blocked by: 02, 09
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
@@ -13,7 +13,7 @@ what an application author writes and what the framework builds on top.
 
 Decide:
 
-- **What does an app author actually touch?** The raw `Signal.State` API, or an Ursprung
+- **What does an app author actually touch?** The raw `Signal.State` API, or an ursprung
   wrapper? A wrapper adds a layer to maintain and hides a standard, which the vision's
   "less magic" principle disfavours; raw signals expose `.get()`/`.set()` ergonomics
   that may read poorly in JSX. Decide, and note which way "no legacy, follow the
@@ -54,7 +54,7 @@ From [the signals research](../research/02-signals.md):
   frozen constant forever**, silently. The indirection-cell pattern (a `Signal.State`
   holding the current producer, wrapped in a stable `Signal.Computed`) is the verified
   escape and preserves identity across the moment a client module's code arrives.
-- **Ursprung must own signal identity** — no `toJSON`, no ids, and `introspectSinks`
+- **ursprung must own signal identity** — no `toJSON`, no ids, and `introspectSinks`
   reports only _watched_ consumers. Subclassing with private fields is the cheap place to
   hang a node id. Coordinate with ticket 19 on which of the two owns the recording.
 - The proposal is **stale at Stage 1** and the polyfill's own README says not to use it in

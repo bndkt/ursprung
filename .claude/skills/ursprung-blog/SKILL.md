@@ -1,9 +1,9 @@
 ---
 name: ursprung-blog
-description: Write a post for the Ursprung dev-log blog as a markdown file. Use when asked for a blog post, a dev log or daily development update, or a deep dive explaining how Ursprung handles a topic or why a design decision was made.
+description: Write a post for the ursprung dev-log blog as a markdown file. Use when asked for a blog post, a dev log or daily development update, or a deep dive explaining how ursprung handles a topic or why a design decision was made.
 ---
 
-Write one markdown post for the Ursprung dev log — the blog that reports how this
+Write one markdown post for the ursprung dev log — the blog that reports how this
 monorepo is developing. The invocation carries the subject; this skill decides the
 shape, the voice, and where the file lands.
 
@@ -20,8 +20,9 @@ apps/web/public/posts/YYYY-MM-DD-slug.md
 - `slug` — lowercase, hyphen-separated, two to five words, no date repeated in it.
   Name the subject, not the genre: `zero-build-package-exports`, not `dev-update`.
 
-Nothing else changes. No index files, no rendering, no routes — how posts get
-displayed is not this skill's problem yet.
+Plus one entry in the hand-maintained post list at
+`apps/web/public/posts/index.html` — see step 5. Nothing else changes: there is no
+renderer and no route for a post, so the markdown file is what a reader gets.
 
 Every post starts with YAML front matter, then the body:
 
@@ -47,7 +48,7 @@ Quote all three values. Escape any `"` inside them.
 
 **1. Decide which of the two posts this is.**
 
-- **Deep dive** — explains how Ursprung handles one topic, or why one design
+- **Deep dive** — explains how ursprung handles one topic, or why one design
   decision went the way it did. Triggered by a subject ("write about the workspace
   layout", "explain the zero-build setup").
 - **Daily development update** — reports what happened in the monorepo on one day.
@@ -83,10 +84,18 @@ keep them apart.
 
 **4. Write the post**, following the shape and voice rules below.
 
-**5. Verify before you finish:** the file is in `apps/web/public/posts/`, the
+**5. Add it to the post list.** `apps/web/public/posts/index.html` is written by hand
+— nothing scans the directory — so a post that is not listed there is unreachable
+from the site. Copy an existing `<li>` in the `<ol>` and change four things: the
+`href`, the `<time>` element's `datetime` and text, the heading, and the teaser. The
+heading is the front-matter `title` and the teaser is the front-matter `description`,
+both verbatim. Order is newest first, so a new post normally goes at the top.
+
+**6. Verify before you finish:** the file is in `apps/web/public/posts/`, the
 filename date matches the front-matter `date`, all three front-matter keys are
-present and quoted, and the body reads in under five minutes. Then report the path
-and title back.
+present and quoted, the body reads in under five minutes, and every `.md` file in
+`apps/web/public/posts/` now has exactly one `<li>` in `index.html`. Then report the
+path and title back.
 
 ## Shape
 
@@ -99,7 +108,7 @@ Four beats, in order:
    thing that broke. Never open with "In this post we will" or with a restatement of
    the title.
 2. **Why it matters** — the constraint, the problem, or the fork in the road. A
-   reader who does not work on Ursprung should still care by the end of this beat.
+   reader who does not work on ursprung should still care by the end of this beat.
 3. **What actually happened** — the substance. Real names, real paths, real numbers.
    Code blocks are welcome when a few lines say what a paragraph cannot; keep them
    short and never paste a whole file.
@@ -112,8 +121,12 @@ the title lives in front matter.
 ## Voice
 
 The audience is developers who follow web application frameworks. They know what a
-monorepo, a bundler, and a type checker are. They do not know Ursprung.
+monorepo, a bundler, and a type checker are. They do not know ursprung.
 
+- **The name is always lowercase**, including at the start of a sentence and in the
+  front-matter `title` and `description`. See the first section of `CLAUDE.md`. A
+  sentence that reads badly starting with a lowercase word should be rewritten so it
+  does not start with the name.
 - **Explain the decision, not the diff.** "The `exports` map points at `src/index.ts`,
   so there is no build step to run before the server boots" beats "changed exports
   field in package.json".
@@ -122,7 +135,7 @@ monorepo, a bundler, and a type checker are. They do not know Ursprung.
 - **Entertaining means having a point of view**, not jokes bolted onto a changelog.
   Trade-offs that were genuinely hard, things that turned out to be wrong, the
   moment a constraint became obvious — that is the entertainment.
-- **Be honest about scope.** Ursprung is early. A post that presents a scaffold as a
+- **Be honest about scope.** ursprung is early. A post that presents a scaffold as a
   finished framework reads as marketing and burns the reader's trust. Small progress
   described accurately is more interesting than small progress inflated.
 - **Prefer plain words.** "Idiomatic", "leverage", "robust", "seamless",

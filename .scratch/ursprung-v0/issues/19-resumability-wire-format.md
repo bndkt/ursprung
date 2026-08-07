@@ -3,7 +3,7 @@
 Type: grilling
 Status: open
 Blocked by: 03, 17, 18
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 

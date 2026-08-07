@@ -4,7 +4,7 @@ description: "The decision to read the config instead of running it rested on an
 date: "2026-08-07"
 ---
 
-Earlier today we wrote down that Ursprung's route file is data the bundler reads, and we were pleased with the reasoning. To learn what routes exist, the bundler would have to evaluate the route file. To evaluate it, it would have to build it first. Building is the thing that needed the route tree. Circular, therefore settled, therefore builder-call route declarations are dead by construction rather than by taste.
+Earlier today we wrote down that ursprung's route file is data the bundler reads, and we were pleased with the reasoning. To learn what routes exist, the bundler would have to evaluate the route file. To evaluate it, it would have to build it first. Building is the thing that needed the route tree. Circular, therefore settled, therefore builder-call route declarations are dead by construction rather than by taste.
 
 That argument is wrong. It conflates two graphs. Building the _config_ graph needs module resolution and type stripping, and neither of those needs the route tree. The route tree is required only to emit route outputs, which happen afterwards. Two phases, no cycle. It went unchallenged through a whole prototype and into the record, because an argument that concludes something convenient is one nobody re-reads.
 
@@ -16,7 +16,7 @@ Before deciding anything we went and read the closest possible precedent, which 
 
 It evaluates. Its `loadConfig` is, once you strip the wrapper, a bare `await import(pathToFileURL(configPath))`. There is no esbuild pass, no temporary file, no bundle. TypeScript is handled by Node's own native type stripping, which is the entire reason Wrangler's error message names a hard floor of Node 22.18.
 
-The machinery around that call is not the evaluation, which was the useful discovery. `registerHooks` from `node:module` is installed for two jobs: appending a UUID query to every resolved `file://` URL so edits are not cached, along with recording the touched files as a dependency set, which is watch-mode infrastructure; and implementing a custom import attribute. Ursprung has no watch mode — that is already a locked constraint — so half of it is irrelevant to us. The other half is genuinely clever and worth stealing later. Wrangler's `entrypoint` field accepts either a path string or this:
+The machinery around that call is not the evaluation, which was the useful discovery. `registerHooks` from `node:module` is installed for two jobs: appending a UUID query to every resolved `file://` URL so edits are not cached, along with recording the touched files as a dependency set, which is watch-mode infrastructure; and implementing a custom import attribute. ursprung has no watch mode — that is already a locked constraint — so half of it is irrelevant to us. The other half is genuinely clever and worth stealing later. Wrangler's `entrypoint` field accepts either a path string or this:
 
 ```ts
 import * as entrypoint from "./src" with { type: "cf-worker" };
@@ -29,7 +29,7 @@ One fact from the same file that we did not expect: Wrangler refuses to load its
 
 ## Drawing the line in a different place
 
-The obvious objection to evaluating anything is that Ursprung's build has to be able to run inside a Worker. That is a locked constraint, and `eval()` and `new Function()` are disallowed on workerd — you get `Code generation from strings disallowed for this context`. Cloudflare does have a mechanism, the Worker Loader binding, where `env.LOADER.load({ mainModule, modules })` spins up a sandboxed isolate from module source strings. But it is beta, and reaching for it felt like a lot of machinery to buy back a constraint.
+The obvious objection to evaluating anything is that ursprung's build has to be able to run inside a Worker. That is a locked constraint, and `eval()` and `new Function()` are disallowed on workerd — you get `Code generation from strings disallowed for this context`. Cloudflare does have a mechanism, the Worker Loader binding, where `env.LOADER.load({ mainModule, modules })` spins up a sandboxed isolate from module source strings. But it is beta, and reaching for it felt like a lot of machinery to buy back a constraint.
 
 The constraint says something more specific than we had been reading it as. It binds _build modules_: every build module takes an injected virtual filesystem and touches no Node API. So put the evaluation outside the build entirely. The CLI evaluates `ursprung.config.ts` with a native `import()` and hands the build `{ vfs, config }`, where `config` is already plain data. The build evaluates nothing, touches no Node API, and stays exactly as portable as it was. Build-in-a-Worker is still reachable; that host just has to produce the evaluated data some other way.
 

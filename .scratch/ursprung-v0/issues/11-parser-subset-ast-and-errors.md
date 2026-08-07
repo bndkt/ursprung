@@ -3,7 +3,7 @@
 Type: grilling
 Status: open
 Blocked by: 06
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
@@ -29,7 +29,7 @@ Decide:
   The answer decides the size of the whole bundler.
 - **The AST shape.** ESTree-compatible, or our own? ESTree buys familiarity and a
   reference to check against; our own buys the freedom to carry delete-spans and
-  Ursprung-specific nodes without pretending to be something else. Neither is obviously
+  ursprung-specific nodes without pretending to be something else. Neither is obviously
   right.
 - **Erasure strategy.** Ticket 06 will report whether established implementations blank
   spans with whitespace to preserve source positions. Decide whether we do the same —
@@ -55,7 +55,7 @@ exhaustive lists this ticket needs, and corrects one premise this ticket inherit
 
 - **`erasableSyntaxOnly` is not sufficient as our accepted subset.** It permits legacy
   decorators, standard decorators and `accessor`, all three of which are hard
-  `SyntaxError`s on workerd. Ursprung's reject list is strictly larger and is our own.
+  `SyntaxError`s on workerd. ursprung's reject list is strictly larger and is our own.
 - The reject list is otherwise complete by construction: one error code (TS1294), six
   checker call sites. It is a _semantic_ diagnostic, so we reimplement rather than lift
   it from a parse.

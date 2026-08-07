@@ -1,6 +1,6 @@
 # No polyfills — workerd natives and `cloudflare:*` only
 
-Ursprung ships no polyfills on any target. On the server the only permitted external
+ursprung ships no polyfills on any target. On the server the only permitted external
 imports are `cloudflare:*` and those `node:*` specifiers workerd implements natively; a
 `node:*` import workerd does not implement natively is a hard build error, and on the
 client every `node:*` import is an error. The `node:` prefix is required, so the
@@ -14,7 +14,7 @@ bundler complexity the project exists to avoid.
 This is stricter than the obvious reading of `nodejs_compat`, and the reason is not
 obvious from the code. Wrangler's unenv polyfills are injected by its **esbuild pass** —
 the one that disabling bundling switches off (see ADR-0002 and the deployment flow). So a
-Worker built by Ursprung has strictly less available than the same source built by
+Worker built by ursprung has strictly less available than the same source built by
 Wrangler, and Wrangler itself warns about this combination. Anyone comparing the two and
 finding a missing builtin should read this before "fixing" it.
 

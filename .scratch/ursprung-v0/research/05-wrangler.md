@@ -1,7 +1,7 @@
 # 05 — Wrangler's experimental TypeScript config: no_bundle, assets, and the build contract
 
 Research findings for [issue 05](../issues/05-wrangler-experimental-config-and-build-contract.md).
-Map: [Ursprung v0](../map.md).
+Map: [ursprung v0](../map.md).
 
 ## Versions this was established against
 
@@ -217,7 +217,7 @@ config files must live in. **A relative `build.cwd` is relative to `process.cwd(
 invisible today but is a real trap.
 
 `watchDir` defaults to `./src` and only matters for `wrangler dev` — irrelevant to
-Ursprung (constraint 11 rules out watch mode).
+ursprung (constraint 11 rules out watch mode).
 
 ---
 
@@ -258,7 +258,7 @@ ExportedHandler<Env>` and the unresolved bare `import … from "ursprung"` intac
   ```
 
   So workerd is happy to _name_ a module `index.ts`, but it executes it as JavaScript.
-  **Ursprung must emit type-stripped JavaScript; the extension is cosmetic, the manifest
+  **ursprung must emit type-stripped JavaScript; the extension is cosmetic, the manifest
   type is what matters.**
 
 ### Imports are not followed
@@ -401,7 +401,7 @@ There is an implicit-routing wrinkle that matters for a streaming-SSR framework
 > provide an array of route patterns to `run_worker_first`. This opts out of interpreting
 > the `Sec-Fetch-Mode` header.
 
-So for Ursprung, where **navigation requests are exactly what the Worker must render**,
+So for ursprung, where **navigation requests are exactly what the Worker must render**,
 `runWorkerFirst` is not optional garnish: without it, a browser navigation to a
 non-asset URL never reaches the Worker. `runWorkerFirst: true` sends every request to the
 Worker; the array form supports negation (`["/api/*", "!/api/docs/*"]`) and per
@@ -462,7 +462,7 @@ No bindings found.
   entrypoint file. A dry run of a no-bundle Worker proves the config is well-formed and
   says almost nothing about whether the Worker runs.
 
-For a no-bundle Ursprung, `wrangler dev --experimental-new-config` (which does boot
+For a no-bundle ursprung, `wrangler dev --experimental-new-config` (which does boot
 workerd — it caught the `satisfies` error above) is the only local check that the emitted
 module set actually loads. That sits awkwardly against constraint 11 ("no dev server") —
 but as a one-shot smoke check for the build's output, not as a development mode.
@@ -593,14 +593,14 @@ and `diagnoseStartupError` (`cli.js` lines 142553 and 142565), the latter pointi
 `https://developers.cloudflare.com/workers/platform/limits/#worker-startup-time` — so both
 surface only on a real deploy, never on a dry run.
 
-The relevant risk for Ursprung is **startup**, not size: constraint 10 duplicates shared
+The relevant risk for ursprung is **startup**, not size: constraint 10 duplicates shared
 code across route bundles, but those are client assets, not Worker modules. The server
 bundle is one file whose entire top level executes inside the 1 s startup budget. Nothing
 measured here; flagged as a thing to measure once a real demo app exists.
 
 ---
 
-## 9. Reference: minimal shape for a no-bundle Ursprung Worker
+## 9. Reference: minimal shape for a no-bundle ursprung Worker
 
 Not a recommendation, just the smallest configuration verified to work end to end
 (`wrangler dev` served a response from a multi-module, un-bundled worker):
@@ -635,7 +635,7 @@ export it.
 
 ---
 
-## Implications for Ursprung
+## Implications for ursprung
 
 Nothing here contradicts a locked constraint. Two constraints get sharper, and three new
 obligations fall on the build.
@@ -646,7 +646,7 @@ obligations fall on the build.
   with `noBundle` — it is the _easy_ case. A single self-contained server module needs no
   `rules` at all: the entrypoint alone is uploaded, and `findAdditionalModules` finding
   nothing is correct rather than a silent bug. The `rules: [{ type: "ESModule", globs:
-["**/*.js"] }]` line above is only needed if Ursprung ever emits more than one server
+["**/*.js"] }]` line above is only needed if ursprung ever emits more than one server
   module. **Recommend ticket 21 keep the server output to exactly one file, precisely so
   the module-rules footgun in §3 never applies.**
 - **Constraint 6** (three dependencies, Wrangler dev-only) holds. `@cloudflare/config` is
@@ -660,7 +660,7 @@ obligations fall on the build.
 
 **New obligations on the build, all of them ticket-21 shaped.**
 
-1. **Ursprung must fully strip types and fully resolve imports.** With `noBundle`, Wrangler
+1. **ursprung must fully strip types and fully resolve imports.** With `noBundle`, Wrangler
    transforms nothing and follows nothing; workerd executes the bytes as JavaScript. A
    `.ts` extension is accepted as a module _name_ but is not a signal — the `satisfies`
    error in §3 is what an un-stripped module looks like in production.
@@ -672,7 +672,7 @@ obligations fall on the build.
    Per §4, without `runWorkerFirst` a browser navigation to a URL that is not a file is
    handled by `notFoundHandling` and never reaches the Worker — which would silently break
    streaming SSR. `runWorkerFirst: true` (Worker first for everything, deferring to
-   `env.ASSETS.fetch()` for real files) is the shape that matches Ursprung's model. This
+   `env.ASSETS.fetch()` for real files) is the shape that matches ursprung's model. This
    belongs in the spec, and it touches "Static assets" under _Not yet specified_ on the map.
 
 **Two things to flag to the maintainer.**
@@ -680,7 +680,7 @@ obligations fall on the build.
 - **The Bun-only toolchain has a hole in it.** §1: `wrangler` must run under Node ≥ 22.18.0
   or the experimental config refuses to load. It works today only because `bun run` defers
   the `#!/usr/bin/env node` shebang to the real `node`. This is a documented-as-unsupported
-  combination, and CLAUDE.md currently asserts the opposite mechanism. If Ursprung ever
+  combination, and CLAUDE.md currently asserts the opposite mechanism. If ursprung ever
   wants to shell out to Wrangler from its own tooling, it must not do so with Bun as the
   runtime.
 - **`--dry-run` is close to worthless as a validation loop once `noBundle` is on** (§5). The
@@ -690,11 +690,11 @@ obligations fall on the build.
   edge of constraint 11 and deserves an explicit call in the spec.
 
 **One unresolved question, handed to ticket 21.** §7: whether `build.command` runs under
-Workers Builds. If ticket 21 designs the contract so that Ursprung is invoked from the
+Workers Builds. If ticket 21 designs the contract so that ursprung is invoked from the
 `apps/web` deploy script (or the dashboard Build command) and Wrangler merely reads
 already-emitted files, the question never has to be answered. That is the recommendation.
 
 **One opportunity.** §6: `.cloudflare/output/v0/` is Cloudflare's own answer to
 "what should a framework emit for Wrangler to deploy" — `mainModule` + a flat `modules`
-map + an `assets/` tree. Even if Ursprung does not target it, ticket 21 should look at it
+map + an `assets/` tree. Even if ursprung does not target it, ticket 21 should look at it
 before inventing a different shape, and note that it is hidden and experimental.

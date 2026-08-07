@@ -1,7 +1,7 @@
 # 01 — capnweb: transport, capability model, and what it demands of a bundler
 
 Research notes for [`.scratch/ursprung-v0/issues/01-capnweb-transport-and-capability-model.md`](../issues/01-capnweb-transport-and-capability-model.md).
-Map: [Ursprung v0](../map.md).
+Map: [ursprung v0](../map.md).
 
 ## Sources and how to read the citations
 
@@ -246,7 +246,7 @@ This is the part that will bite. The rule is **the caller disposes**
 Workers' built-in RPC used the _opposite_ params convention until the
 `rpc_params_dup_stubs` flag, whose enable-date is **2026-01-20**
 (`cf-docs:https://developers.cloudflare.com/workers/configuration/compatibility-flags/`).
-Ursprung's `apps/web/cloudflare.config.ts` sets `compatibilityDate: "2026-08-07"`,
+ursprung's `apps/web/cloudflare.config.ts` sets `compatibilityDate: "2026-08-07"`,
 so the flag is already on by default.
 
 ### `map()` — remote transformation without a round trip
@@ -312,7 +312,7 @@ typed arrays, and `URL`. Confirmed as post-release: `verified` —
 newest commit on `main` is literally "feat: serialize URL objects over RPC
 (#224)". GitHub issues #221/#222/#230 (`Set`, `RegExp`, `Map`) are still open.
 
-**Anything Ursprung wants beyond the 0.10.0 list requires waiting for a
+**Anything ursprung wants beyond the 0.10.0 list requires waiting for a
 release.**
 
 ### Unserialisable values throw synchronously at the sender
@@ -582,7 +582,7 @@ Stated plainly, because these are gaps and not guesses:
 
 ---
 
-## Implications for Ursprung
+## Implications for ursprung
 
 Mapped against the locked constraints on [`map.md`](../map.md).
 
@@ -600,7 +600,7 @@ Mapped against the locked constraints on [`map.md`](../map.md).
   statements; `dist/index-workers.js` has exactly one. capnweb's own build
   deliberately keeps entries self-contained "because workerd loads
   dist/index-workers.js directly and cannot resolve generated shared chunks"
-  (`repo:tsdown.config.ts`). This matches Ursprung's model exactly. Duplicating
+  (`repo:tsdown.config.ts`). This matches ursprung's model exactly. Duplicating
   capnweb into the server bundle and each route bundle costs ~92 KB unminified
   (~20 KB gzipped) per bundle, which constraint 10 already accepts.
 - **Constraint 6 (exactly three dependencies).** ✅ capnweb has **zero**
@@ -626,7 +626,7 @@ Mapped against the locked constraints on [`map.md`](../map.md).
 2. **`cloudflare:*` must be externalised on the server.** Constraint 15 names
    `node:*` as external on the server and says nothing about `cloudflare:*`.
    `dist/index-workers.js` starts with `import * as cfw from "cloudflare:workers"`.
-   Either constraint 15 grows a `cloudflare:*` clause, or Ursprung resolves
+   Either constraint 15 grows a `cloudflare:*` clause, or ursprung resolves
    capnweb with the plain `import` condition on the server too — which works
    (per `repo:src/core.ts:36`) at the cost of Workers-RPC interop, but is a
    configuration nobody documents. **This needs a decision, and it is the one
@@ -672,7 +672,7 @@ Mapped against the locked constraints on [`map.md`](../map.md).
   or out explicitly rather than discovering it later.
 - **Serialisation constraints leak into the API contract.** A server function
   returning a `Map`, a `Set`, a `URL`, an `Int32Array`, a class instance, or a
-  cyclic object throws a `TypeError` **at the sender** in 0.10.0. Ursprung has
+  cyclic object throws a `TypeError` **at the sender** in 0.10.0. ursprung has
   no type model (constraint 8), so it cannot catch this at build time — it will
   be a runtime error. Either document the supported return-type set loudly, or
   own a diagnostic at the boundary.
@@ -687,8 +687,8 @@ Mapped against the locked constraints on [`map.md`](../map.md).
   second npm dependency (constraint 6 → needs approval), it works through a
   **decorator** — non-erasable syntax that constraint 8 makes a hard build
   error — and it needs the **TypeScript type checker** at build time, which
-  constraint 8 explicitly rules out ("no type model"). Ursprung cannot adopt it
-  without reopening two locked constraints. The consequence is that Ursprung's
+  constraint 8 explicitly rules out ("no type model"). ursprung cannot adopt it
+  without reopening two locked constraints. The consequence is that ursprung's
   RPC boundary has **no runtime type validation**, and every server function is
   reachable by an untrusted caller with arbitrary argument types. That should
   be written down as a known v0 property, not discovered later.

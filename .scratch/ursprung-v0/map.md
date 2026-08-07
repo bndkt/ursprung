@@ -1,10 +1,10 @@
-# Ursprung v0
+# ursprung v0
 
 Wayfinder map. Label: `wayfinder:map`.
 
 ## Destination
 
-A **locked v0 architecture spec** for Ursprung on the web — Cloudflare Workers only —
+A **locked v0 architecture spec** for ursprung on the web — Cloudflare Workers only —
 plus the decision record behind it, sharp enough that implementation tickets can be cut
 from it without further design. The spec accumulates at
 [`spec.md`](./spec.md); vocabulary lands in the root [`CONTEXT.md`](../../CONTEXT.md)
@@ -44,13 +44,13 @@ and reopening one is a scope change, not a ticket.
 5. One package, `ursprung`, with subpath exports (`ursprung/jsx-runtime`,
    `ursprung/client`, `ursprung/server`, `ursprung/build`). `apps/web` becomes the
    canonical demo app.
-6. Ursprung's own dependencies are exactly three: the TC39 Signals polyfill, capnweb,
+6. ursprung's own dependencies are exactly three: the TC39 Signals polyfill, capnweb,
    and Wrangler (dev-only). Real npm dependencies, not vendored. **Every additional
    dependency needs the maintainer's explicit approval.**
 7. Applications **may** depend on npm packages — ESM only (see 14).
 8. The parser builds a real AST for expressions, statements, imports and JSX, and treats
    type syntax as **opaque delete-spans**. No type model, no scope/binding model. Loud
-   errors on non-erasable constructs — and **the reject list is Ursprung's own, strictly
+   errors on non-erasable constructs — and **the reject list is ursprung's own, strictly
    larger than `erasableSyntaxOnly`'s**. That flag permits legacy decorators, standard
    decorators and `accessor`, all three of which are `SyntaxError`s on workerd, so
    "whatever TypeScript accepts" is not a safe rule.
@@ -65,7 +65,7 @@ and reopening one is a scope change, not a ticket.
     function from a virtual filesystem to output files.
 12. Streaming SSR in v0, **in-order only**. An async component blocks the stream at its
     position. No out-of-order flushing, no placeholder-then-patch.
-13. The caller populates the VFS with package files; Ursprung only reads it. Ursprung is
+13. The caller populates the VFS with package files; ursprung only reads it. ursprung is
     never a package manager and never fetches from a registry.
 14. npm dependencies are **ESM only** in v0. A CJS-only package is a hard build error.
 15. **No polyfills, ever, on any target.** On the server the only permitted externals are
@@ -85,11 +85,11 @@ Where a resolved ticket shows a locked constraint to be wrong, it is proposed he
 than edited in — the constraints are the maintainer's. Approved amendments are folded
 into the list above and struck from this section.
 
-**Proposed 2026-08-07 — Ursprung emits a module graph, not bundles.** Raised by the
+**Proposed 2026-08-07 — ursprung emits a module graph, not bundles.** Raised by the
 maintainer after ticket 07, in three steps that are clearer as one. Proposed replacement
 for constraint 10:
 
-> Ursprung emits **real ESM modules and lets the host's own module system link them**. It
+> ursprung emits **real ESM modules and lets the host's own module system link them**. It
 > ships no loader on either side: workerd's module registry links the server, the
 > browser's module map links the client, and both guarantee **one instance per resolved
 > specifier**.
@@ -104,7 +104,7 @@ for constraint 10:
 
 This drops "one self-contained ESM file per bundle", "no chunks", "no shared extraction"
 and "duplication across route bundles is accepted" — most of the old constraint 10. It
-keeps the part that was always the real invariant: **Ursprung ships no loader.**
+keeps the part that was always the real invariant: **ursprung ships no loader.**
 
 **Why, recorded carefully, because the obvious reasons are not the load-bearing ones.**
 
@@ -125,7 +125,7 @@ keeps the part that was always the real invariant: **Ursprung ships no loader.**
 
 **The cost, stated honestly.** A self-contained bundle is one request; a module graph is a
 request waterfall — fetch the Route entry, parse it, discover its imports, fetch those.
-Ursprung controls the HTML because it does Server rendering, so it can emit
+ursprung controls the HTML because it does Server rendering, so it can emit
 `<link rel="modulepreload">` for exactly the modules a Route needs and start those fetches
 in parallel with the document. That mitigation should be designed in ticket 21, not
 assumed. Also new: content-hashed filenames, so shared modules cache immutably.
@@ -210,7 +210,7 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   `assetsDirectory`), so the vision's deployment flow is expressible; the entrypoint is
   uploaded byte-for-byte and imports are not followed; `runWorkerFirst` is required or
   navigations never reach the Worker.
-- [The canonical demo app, written as if Ursprung v0 already existed](./issues/07-canonical-demo-app-prototype.md)
+- [The canonical demo app, written as if ursprung v0 already existed](./issues/07-canonical-demo-app-prototype.md)
   — the route file is a **nested object literal** carrying **lazy** `() => import(...)`
   references, with **API methods declared in the route file** against arbitrarily-named
   exports. Builder-call variants are ruled out: the bundler reads the route tree as data
@@ -288,5 +288,5 @@ Ruled beyond this destination. Never graduates; returns only as a fresh effort.
 - **The build-in-a-Worker product** — an agent driving a dynamic Worker, writing to R2,
   serving from a dispatch namespace. The constraint is in scope; the product is not.
 - **Node builtin polyfills for the browser.**
-- **Ursprung as a package manager** — no registry client, no tarball extraction, no
+- **ursprung as a package manager** — no registry client, no tarball extraction, no
   lockfile interpretation.

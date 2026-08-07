@@ -3,7 +3,7 @@
 Type: research
 Status: resolved
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 

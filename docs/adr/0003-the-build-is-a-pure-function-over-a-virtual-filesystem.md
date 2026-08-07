@@ -14,7 +14,7 @@ exactly what the purity requirement forbids. The two decisions reinforce each ot
 adding a dev server later should be understood as adding a second implementation, not as
 extending this one.
 
-Because Ursprung only ever reads the virtual filesystem, whoever invokes the build is
+Because ursprung only ever reads the virtual filesystem, whoever invokes the build is
 responsible for populating it: the CLI mounts the real filesystem, and an agent running
 inside a Worker materialises the application and its packages from R2 or elsewhere.
 

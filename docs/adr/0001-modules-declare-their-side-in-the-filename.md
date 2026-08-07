@@ -18,4 +18,4 @@ from reachability instead. The asymmetry is safe because the invariant that matt
 (server code never reaches a route bundle) is enforced by first-party server modules,
 which are always declared.
 
-Reversing this later means renaming every file in every Ursprung application.
+Reversing this later means renaming every file in every ursprung application.
