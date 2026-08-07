@@ -5,5 +5,5 @@
     // `worker-configuration.d.ts` instead of `@types/bun`.
     "types": []
   },
-  "include": ["src", "cloudflare.config.ts", "worker-configuration.d.ts"]
+  "include": ["src", "cloudflare.config.ts", "wrangler.config.ts", "worker-configuration.d.ts"]
 }

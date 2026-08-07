@@ -1,6 +1,9 @@
 node_modules/
 dist/
 .wrangler/
+# Generated from apps/web/src/styles.css by `bun run build:css`, which the dev
+# and deploy scripts run first.
+apps/web/public/styles.css
 *.log
 .DS_Store
 .env

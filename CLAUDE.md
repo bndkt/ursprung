@@ -5,8 +5,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 All commands run from the repo root unless noted. Bun is the only toolchain for
-installing, testing and typechecking — there is no npm step. The one bundler in
-the repo is Wrangler's, and it only runs when the Worker is served or deployed.
+installing, testing and typechecking — there is no npm step. Two things compile:
+Wrangler's bundler and the Tailwind CLI, and both run only when the Worker is
+served or deployed. No TypeScript is ever compiled ahead of time.
 
 ```bash
 bun install                      # install; also links the workspace symlinks
@@ -18,6 +19,7 @@ bun run lint                     # oxlint
 bun run lint:fix                 # oxlint with autofix
 bun run fmt                      # oxfmt, rewrites files in place
 bun run fmt:check                # oxfmt in check-only mode (use in CI)
+bun run build:css                # Tailwind: apps/web/src/styles.css -> public/styles.css
 bun run dev                      # ursprung-web in `wrangler dev` on :8787
 bun run deploy                   # deploy ursprung-web to Cloudflare
 bun run deploy:preview           # upload a version, no production traffic shift
@@ -38,7 +40,8 @@ Bun workspace monorepo, two members declared in the root `package.json`
   the single source of truth for both values; do not hardcode them in `src/`.
 - **`apps/web`** (`ursprung-web`) — a Cloudflare Worker. `src/index.ts` is the
   whole thing: it imports `ursprung` and default-exports a module Worker whose
-  `fetch` handler answers every request with `${name} v${version}`.
+  `fetch` handler answers every request with `${name} v${version}`. Requests that
+  match a file under `public/` never reach it — see below.
 
 ### The Worker is configured in TypeScript, not JSON
 
@@ -60,10 +63,13 @@ Two consequences of it being experimental:
   `wrangler dev`, which rewrites it on boot. It is committed so that
   typechecking works from a clean clone.
 
-A sibling `wrangler.config.ts` is also read when present; it takes only the
-build/dev tooling keys (`minify`, `alias`, `define`, `dev`, …). Worker-shaped
-settings — name, compatibility date, bindings, triggers — belong in
-`cloudflare.config.ts`, and Wrangler errors if they appear in the other file.
+The sibling `apps/web/wrangler.config.ts` is the other half — a
+`defineWranglerConfig({ ... })` default export, imported from
+`wrangler/experimental-config` rather than `@cloudflare/config`, which does not
+export it. It takes only the build/dev tooling keys (`minify`, `alias`,
+`define`, `dev`, `assetsDirectory`, …). Worker-shaped settings — name,
+compatibility date, bindings, triggers — belong in `cloudflare.config.ts`, and
+Wrangler errors if they appear in the other file.
 
 The schema is a Zod `strictObject`, so a misspelled key is a hard error rather
 than a silently ignored setting. A dry-run deploy from `apps/web` is the
@@ -72,6 +78,43 @@ cheapest way to validate a config change without shipping it:
 ```bash
 bun run wrangler deploy --dry-run --experimental-new-config
 ```
+
+### Static assets and Tailwind
+
+`apps/web/public/` is served as static assets. The directory is named on the
+tooling side (`assetsDirectory` in `wrangler.config.ts`) and the runtime
+behaviour on the Worker side (`assets` in `cloudflare.config.ts`) — that split
+is Wrangler's, not a choice made here, and `assetsDirectory` is the only asset
+key the tooling file accepts.
+
+Routing is Cloudflare's default: a request matching a file under `public/` is
+served from the asset store **without invoking the Worker**, and everything else
+falls through to `fetch`. So `/` still answers `ursprung v<version>` from
+`src/index.ts` while `/posts/` is the blog index. `htmlHandling` is
+`auto-trailing-slash`, which makes `/posts` and `/posts/index.html` both `307`
+to `/posts/`. There is no `ASSETS` binding, because nothing in the Worker needs
+to reach the asset store by hand; adding one means an `env` entry in
+`cloudflare.config.ts` and a regenerated `worker-configuration.d.ts`.
+
+Styling is [Tailwind](https://tailwindcss.com) v4 via its standalone CLI. This is
+the repo's only compile-to-a-file build step, and it is deliberately small:
+
+- `apps/web/src/styles.css` is the input — `@import "tailwindcss"` plus an
+  explicit `@source "../public/**/*.html"`. That `@source` is load-bearing.
+  Tailwind v4 auto-detects source files relative to the stylesheet, which would
+  only ever scan `src/`; the markup lives in `public/`. Globbing `*.html` rather
+  than the whole directory also keeps the generated `public/styles.css` from
+  being scanned as an input to itself.
+- `public/styles.css` is the output. It is **gitignored** — `build:css` runs as
+  the first step of `dev`, `deploy` and `deploy:preview`, so every environment
+  that serves the Worker generates it first. Nothing commits it, and nothing
+  should.
+- Keeping the build inside those three package scripts is what leaves the
+  Workers Builds dashboard alone: the build command there stays empty and the
+  deploy command stays `bun run deploy`, exactly as documented below.
+
+The consequence worth stating: opening `public/posts/index.html` straight off
+disk gets unstyled HTML until `bun run build:css` has run at least once.
 
 ### Deployment
 
@@ -82,7 +125,7 @@ Cloudflare's Git integration, not from a developer machine. It builds on push to
 | Setting                              | Value                     |
 | ------------------------------------ | ------------------------- |
 | Root directory                       | `apps/web`                |
-| Build command                        | _(empty — no build step)_ |
+| Build command                        | _(empty — see below)_     |
 | Deploy command                       | `bun run deploy`          |
 | Non-production branch deploy command | `bun run deploy:preview`  |
 | Non-production branch builds         | enabled (all branches)    |
@@ -93,8 +136,10 @@ Both deploy commands are `apps/web` package scripts rather than inline
 place — the manifest — instead of being duplicated into dashboard fields nobody
 diffs. `deploy` runs `wrangler deploy` (production branch); `deploy:preview`
 runs `wrangler versions upload`, which uploads a version and hands back a
-preview URL without shifting production traffic. Changing either script changes
-what CI does; the dashboard fields should not need editing again.
+preview URL without shifting production traffic. Both run `build:css` first,
+which is why the dashboard's build command can stay empty even though the
+stylesheet is generated. Changing either script changes what CI does; the
+dashboard fields should not need editing again.
 
 Non-production branch builds are what make every branch — and so every pull
 request — build at all. With them off, only `main` ever produces a version and
