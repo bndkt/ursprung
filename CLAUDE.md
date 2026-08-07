@@ -11,7 +11,11 @@ bun install                      # install; also links the workspace symlinks
 bun test                         # every test in the monorepo
 bun test packages/ursprung       # one workspace
 bun test -t "exports the package name"   # one test by name
-bun --filter '*' typecheck       # tsc --noEmit in each workspace
+bun run typecheck                # tsc --noEmit at the root, then in each workspace
+bun run lint                     # oxlint
+bun run lint:fix                 # oxlint with autofix
+bun run fmt                      # oxfmt, rewrites files in place
+bun run fmt:check                # oxfmt in check-only mode (use in CI)
 bun run dev                      # ursprung-web with --hot reload on :3000
 bun run start                    # ursprung-web without reload
 bun run skills:update            # update .agents/skills from skills-lock.json sources
@@ -59,3 +63,30 @@ relative imports carry explicit `.ts` extensions (`from "./index.ts"`).
 
 `packages/ursprung/tsconfig.json` includes `package.json` alongside `src` so the
 JSON import typechecks; keep that in `include` if you touch it.
+
+The root `tsconfig.json` exists only to typecheck the root-level `*.config.ts`
+files — the workspaces do not `extend` it and it compiles no source.
+
+## Linting and formatting
+
+[oxlint](https://oxc.rs/docs/guide/usage/linter) and
+[oxfmt](https://oxc.rs/docs/guide/usage/formatter) from the oxc toolchain, both
+configured with **TypeScript config files, not JSON**:
+
+- `oxlint.config.ts` — default settings: the `typescript`, `unicorn`, and `oxc`
+  plugins with the `correctness` category at `error`.
+- `oxfmt.config.ts` — default settings (printWidth 100, 2-space indent,
+  semicolons, double quotes, trailing commas, `package.json` key sorting).
+
+Both take a default export wrapped in `defineConfig`, imported from the tool's
+own package. A tool reads exactly one config per directory, so do not add an
+`.oxlintrc.json` or `.oxfmtrc.json` beside these — the JSON and TS forms cannot
+coexist, and adding one silently changes which config wins.
+
+`oxfmt` ignores `.agents/skills/**` via `ignorePatterns`: that tree is vendored
+content synced from `skills-lock.json`, so formatting it only creates churn that
+the next `bun run skills:update` discards. It otherwise honours `.gitignore`.
+
+These are npm packages whose bins carry a `#!/usr/bin/env node` shebang, but
+`bun run` substitutes itself for `node`, so the Bun-only toolchain still holds —
+neither tool needs a Node install.
