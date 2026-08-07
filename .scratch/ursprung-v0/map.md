@@ -82,47 +82,67 @@ Where a resolved ticket shows a locked constraint to be wrong, it is proposed he
 than edited in — the constraints are the maintainer's. Approved amendments are folded
 into the list above and struck from this section.
 
-**Proposed 2026-08-07 — the Server bundle is not one output.** Raised by the maintainer
-after ticket 07. Replace the single Server bundle with **one root server entrypoint** —
-the Worker entrypoint Wrangler is configured with — **plus one server entrypoint per
-Route**, which the root imports lazily once the router has matched. Constraint 10 says
-"one self-contained ESM file per bundle"; that survives intact, and there are simply more
-bundles. What changes is `CONTEXT.md`'s definition of **Server bundle** as "the single
-output containing all code that runs on the server".
+**Proposed 2026-08-07 — Ursprung emits a module graph, not bundles.** Raised by the
+maintainer after ticket 07, in three steps that are clearer as one. Proposed replacement
+for constraint 10:
 
-**Proposed 2026-08-07 — constraint 10 splits by side; the server gets shared
-extraction.** Follows directly from the amendment above, and settles the fork it left
-open. Constraint 10 currently forbids shared extraction everywhere. The maintainer's call
-is that the server needs it. Proposed replacement for constraint 10:
-
-> **Client output:** one self-contained ESM file per Route bundle. No chunks, no shared
-> extraction, no runtime loader — the browser has none and Ursprung will not ship one.
-> Duplication across Route bundles is accepted.
+> Ursprung emits **real ESM modules and lets the host's own module system link them**. It
+> ships no loader on either side: workerd's module registry links the server, the
+> browser's module map links the client, and both guarantee **one instance per resolved
+> specifier**.
 >
-> **Server output:** real ESM modules, linked by workerd's own module registry — a root
-> entrypoint, one module per Route, and shared modules emitted once rather than
-> duplicated into each. Ursprung ships no loader here either: workerd is the loader.
+> The server output is a **root entrypoint** — the Worker entrypoint Wrangler is
+> configured with, carrying the router — plus **one module per Route**, imported lazily
+> once the router has matched. The client output is **one entry module per Route**, loaded
+> from the assets directory. On both sides, a module reachable from more than one
+> entrypoint is **emitted once and shared**, not duplicated.
 >
-> Circular imports are an error on both sides.
+> Circular imports are an error.
 
-Two things worth recording about why, because the obvious reason is not the load-bearing
-one. Ticket 02's silent two-copies-of-the-polyfill failure does **not** force this — the
-bundler could inline each Route's whole ancestor chain into its own entrypoint, keeping
-one copy live per request. What forces it is **upload size**: N Route entrypoints each
-carrying a full copy of renderer, signals and capnweb, against a total script-size limit.
+This drops "one self-contained ESM file per bundle", "no chunks", "no shared extraction"
+and "duplication across route bundles is accepted" — most of the old constraint 10. It
+keeps the part that was always the real invariant: **Ursprung ships no loader.**
 
-The second, larger consequence is that this **removes ticket 14's hardest half on the
-server**. Flat concatenation needs every import rewritten to a local binding with no
-binding model to dodge collisions with; real ESM modules get module scope for free. The
-client still needs the flat path, so ticket 14 now owns two emit strategies rather than
-one harder one.
+**Why, recorded carefully, because the obvious reasons are not the load-bearing ones.**
 
-Both amendments are blocked on
-[ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md): whether workerd
-permits `import()` inside a `fetch` handler at all, and whether its module registry
-guarantees one instance per specifier — extraction is only safe if it does. **Neither is
-folded in until that research lands.** If 27 comes back negative on dynamic import, the
-existing single-Server-bundle model stands and both amendments lapse together.
+- Ticket 02's silent two-copies-of-the-polyfill failure does **not** force this. The
+  bundler could inline each Route's ancestor chain into its own entrypoint and keep one
+  copy live per request. It is dissolved as a side effect, not a cause — see the fog note
+  on client-side navigation, whose central trap this removes outright.
+- On the server, **upload size** forces it: N Route entrypoints each carrying a full copy
+  of renderer, signals and capnweb, against a total script-size limit.
+- On the client, **cross-route caching** forces it: with self-contained bundles, a second
+  Route re-downloads the whole runtime.
+- The largest consequence is neither. **It dissolves the tension ticket 14 exists to
+  resolve.** Flat concatenation needs every import rewritten to a local binding, with no
+  binding model to dodge identifier collisions with — constraint 8 against constraint 10.
+  Real ESM modules get module scope for free, so no renaming and no scope model are
+  needed anywhere. Ticket 14 shrinks from "resolve a two-constraint contradiction" to
+  module naming, content hashing, ordering and asset layout.
+
+**The cost, stated honestly.** A self-contained bundle is one request; a module graph is a
+request waterfall — fetch the Route entry, parse it, discover its imports, fetch those.
+Ursprung controls the HTML because it does Server rendering, so it can emit
+`<link rel="modulepreload">` for exactly the modules a Route needs and start those fetches
+in parallel with the document. That mitigation should be designed in ticket 21, not
+assumed. Also new: content-hashed filenames, so shared modules cache immutably.
+
+**This un-scopes something.** "Chunk splitting and shared-chunk extraction" was in Out of
+scope purely as a consequence of constraint 10, and has been removed from that list. Net
+work is lower, not higher — deciding what to extract is a graph analysis over the module
+graph, which is far cheaper than the scope model this avoids.
+
+**Vocabulary changes if this lands.** `CONTEXT.md` defines **Server bundle** as "the
+single output containing all code that runs on the server" and **Route bundle** as "the
+output for one route" — both become wrong, and there is no term yet for a shared emitted
+module. That is a `/domain-modeling` pass once ticket 27 reports.
+
+Blocked on [ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md): whether
+workerd permits `import()` inside a `fetch` handler, and whether its registry guarantees
+one instance per specifier. The browser half needs no research — the HTML module map has
+guaranteed both for years — so a negative from 27 would leave the **client** half of this
+amendment standing on its own, with only the server reverting to a single bundle. **Not
+folded in until that research lands.**
 
 Previously: constraints 8 and 15 were both amended on 2026-08-07, from findings in
 [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
@@ -181,13 +201,13 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
 - **Runtime routing and dispatch.** Matching, params, 404s, redirects, trailing slashes.
   Falls out of the route authoring API once that's settled.
 - **Client-side navigation.** Whether v0 has it at all, or whether every link is a full
-  document load. Cheaper to answer once streaming and resumability are pinned. Now also
-  carries a trap found by [ticket 02](./issues/02-tc39-signals-and-polyfill.md): two
-  Route bundles live in one document means two copies of the signal polyfill, hence two
-  disjoint reactive graphs, and the cross-copy failure is **silent** — a computed reading
-  a state from the other copy returns one correct value and then freezes forever. Either
-  only one Route bundle is ever live per document, or the polyfill needs an explicit
-  exemption from constraint 10's accepted duplication.
+  document load. Cheaper to answer once streaming and resumability are pinned. The trap
+  found by [ticket 02](./issues/02-tc39-signals-and-polyfill.md) — two Route bundles live
+  in one document meaning two copies of the signal polyfill, two disjoint reactive graphs
+  and a **silent** cross-copy freeze — is **dissolved by the pending constraint 10
+  amendment**, since the browser's module map gives one polyfill instance per resolved
+  URL however many Route entry modules are live. If that amendment lapses, this trap comes
+  straight back.
 - **Error boundaries.** The component-level construct: what one is, where it sits in the
   tree, and what it renders. The _response_ half of this — status codes and mid-stream
   throws — graduated to [ticket 26](./issues/26-errors-after-stream-start.md) once
@@ -210,7 +230,6 @@ Ruled beyond this destination. Never graduates; returns only as a fresh effort.
   platform work is a separate effort.
 - **CJS support for npm dependencies.** ESM-only in v0.
 - **Dev server, HMR, watch mode.**
-- **Chunk splitting and shared-chunk extraction.**
 - **Minification, identifier renaming, and source maps** — all need the scope model
   constraint 8 rules out.
 - **Stylesheets and a general asset pipeline.** Explicitly out per the vision.
