@@ -4,7 +4,7 @@ description: "A throwaway prototype ruled out one route-file design by construct
 date: "2026-08-07"
 ---
 
-Ursprung's route file is data the bundler reads. That sounds like an implementation detail until you try writing one as a chain of builder calls:
+ursprung's route file is data the bundler reads. That sounds like an implementation detail until you try writing one as a chain of builder calls:
 
 ```ts
 export default route("/")
@@ -16,7 +16,7 @@ To learn what routes exist, the bundler has to evaluate that expression. To eval
 
 ## Writing the app before the framework
 
-The highest-leverage ticket on the v0 map was a prototype: write the canonical demo app's source as if Ursprung already existed. It ended up as a build log — `/builds`, a nested `/builds/:id`, an API route, a server component that awaits slow data, a client component with a signal, a shared module, and a client component importing a function from a `.server.ts` and calling it as though it were local.
+The highest-leverage ticket on the v0 map was a prototype: write the canonical demo app's source as if ursprung already existed. It ended up as a build log — `/builds`, a nested `/builds/:id`, an API route, a server component that awaits slow data, a client component with a signal, a shared module, and a client component importing a function from a `.server.ts` and calling it as though it were local.
 
 None of it runs. It imports a package with no source behind it. That is the point: you can look at real code, and you cannot look at an idea.
 
@@ -38,7 +38,7 @@ The first split the server. There is no single server output; there is a root en
 
 The browser has one. It is the HTML specification's module map, it guarantees one instance per resolved URL exactly as workerd's registry does, and it has supported dynamic `import()` for years. The instinct that bundlers must ship a loader to split code comes from non-ESM output formats, the `__webpack_require__` shape. We emit ESM. Native imports need nothing from us on either side.
 
-So the constraint lost most of its text and kept the part that was always the real invariant: Ursprung ships no loader. Both hosts already have one.
+So the constraint lost most of its text and kept the part that was always the real invariant: ursprung ships no loader. Both hosts already have one.
 
 ## What that was worth
 

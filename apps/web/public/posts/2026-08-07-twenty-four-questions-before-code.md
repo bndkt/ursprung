@@ -4,7 +4,7 @@ description: "Planning v0 as a map of open decisions rather than a task list, an
 date: "2026-08-07"
 ---
 
-TypeScript's `erasableSyntaxOnly` flag exists to reject syntax that cannot simply be deleted — `enum`, parameter properties, namespaces with runtime values. Ursprung intends to accept exactly the erasable subset, so the obvious rule to write down is "accept whatever `erasableSyntaxOnly` accepts."
+TypeScript's `erasableSyntaxOnly` flag exists to reject syntax that cannot simply be deleted — `enum`, parameter properties, namespaces with runtime values. ursprung intends to accept exactly the erasable subset, so the obvious rule to write down is "accept whatever `erasableSyntaxOnly` accepts."
 
 That rule is wrong, and it takes one file to prove:
 
@@ -23,7 +23,7 @@ enum E {
 }
 ```
 
-With `erasableSyntaxOnly` on, the compiler flags the `enum` and nothing else. The decorator and `accessor` pass clean. Both are hard `SyntaxError`s on workerd, the runtime Ursprung targets. So the obvious rule produces a parser that cheerfully accepts source the runtime will refuse, and the failure arrives at deploy time rather than build time.
+With `erasableSyntaxOnly` on, the compiler flags the `enum` and nothing else. The decorator and `accessor` pass clean. Both are hard `SyntaxError`s on workerd, the runtime ursprung targets. So the obvious rule produces a parser that cheerfully accepts source the runtime will refuse, and the failure arrives at deploy time rather than build time.
 
 We found that before writing the parser, which is the entire argument for what follows.
 
@@ -41,16 +41,16 @@ The six research tickets went out to agents in parallel, each pointed at primary
 
 ## What the reading changed
 
-**The deployment flow survives.** The vision depends on disabling Wrangler's bundling and having it run Ursprung as a custom build command instead. Wrangler's experimental TypeScript config is a Zod `strictObject`, so a guessed key is a hard error, and it was entirely possible that `noBundle` simply had no equivalent there. It does — on the sibling `wrangler.config.ts`, along with `build.command`. The single largest risk on the map evaporated on the first read.
+**The deployment flow survives.** The vision depends on disabling Wrangler's bundling and having it run ursprung as a custom build command instead. Wrangler's experimental TypeScript config is a Zod `strictObject`, so a guessed key is a hard error, and it was entirely possible that `noBundle` simply had no equivalent there. It does — on the sibling `wrangler.config.ts`, along with `build.command`. The single largest risk on the map evaporated on the first read.
 
-**capnweb has no allowlist.** Every prototype method on the root RPC object is callable by anyone who can reach the endpoint. TypeScript's `private` hides nothing at runtime; only `#private` fields do. That means the object Ursprung generates for the server boundary _is_ the security perimeter, with nothing behind it. It also turns out that capnweb's own validation package is unreachable for us: it needs a decorator, the TypeScript checker, and a second dependency — three separate constraints rule it out independently.
+**capnweb has no allowlist.** Every prototype method on the root RPC object is callable by anyone who can reach the endpoint. TypeScript's `private` hides nothing at runtime; only `#private` fields do. That means the object ursprung generates for the server boundary _is_ the security perimeter, with nothing behind it. It also turns out that capnweb's own validation package is unreachable for us: it needs a decorator, the TypeScript checker, and a second dependency — three separate constraints rule it out independently.
 
-**One constraint got stricter rather than looser.** The map said `node:*` imports stay external on the server because `nodejs_compat` serves them. Half true. Wrangler's Node polyfills are injected by its esbuild pass — the exact pass that disabling bundling switches off. A Worker built by Ursprung therefore has strictly less available than the same source built by Wrangler. The resolution was to lean into it: no polyfills at all, on any target, with only workerd's natively-implemented modules and `cloudflare:*` permitted.
+**One constraint got stricter rather than looser.** The map said `node:*` imports stay external on the server because `nodejs_compat` serves them. Half true. Wrangler's Node polyfills are injected by its esbuild pass — the exact pass that disabling bundling switches off. A Worker built by ursprung therefore has strictly less available than the same source built by Wrangler. The resolution was to lean into it: no polyfills at all, on any target, with only workerd's natively-implemented modules and `cloudflare:*` permitted.
 
 **Qwik keeps its state as a whole-document post-pass**, in both v1 and v2. That matters because v0 committed to in-order streaming only, and the worry was that the restriction was arbitrary. It is not: every mechanism Qwik built to survive out-of-order streaming — backpatching, subscription patches, paired negative segment ids — is complexity that in-order streaming never incurs. A measured payload from a production Qwik page came in at 15.5% of HTML bytes, which is now the budget the wire format gets designed against.
 
 ## Being wrong in public
 
-One finding was a correction to an earlier finding. Reading capnweb's export conditions from the npm registry gave an order in which the generic build wins over the Workers build — a real conclusion, recorded on the ticket. It was wrong. The registry reorders JSON object keys by length, and export condition precedence _is_ key order. The authored manifest puts `workerd` first. The rule now written down is that Ursprung must never read a manifest from the registry API, only from a tarball or a repository.
+One finding was a correction to an earlier finding. Reading capnweb's export conditions from the npm registry gave an order in which the generic build wins over the Workers build — a real conclusion, recorded on the ticket. It was wrong. The registry reorders JSON object keys by length, and export condition precedence _is_ key order. The authored manifest puts `workerd` first. The rule now written down is that ursprung must never read a manifest from the registry API, only from a tarball or a repository.
 
 Seven tickets are takeable now. The first is a prototype: write the demo app's source as if the framework already existed, so that every downstream decision argues with a concrete artifact instead of a blank page. One ticket cannot be answered by reading at all — whether Cloudflare's Workers Builds honours a custom build command, where Wrangler's source and Cloudflare's documentation flatly disagree. That one needs a real push and a real build log.
