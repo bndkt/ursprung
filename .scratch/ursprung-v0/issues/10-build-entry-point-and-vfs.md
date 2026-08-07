@@ -1,7 +1,7 @@
 # 10 — The build entry point and the virtual filesystem interface
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: —
 Map: [ursprung v0](../map.md)
 
