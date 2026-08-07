@@ -35,7 +35,13 @@ Decide:
   `packages/ursprung`'s `files` field excludes tests from the tarball?
 - **Snapshot testing of emitted bundles.** Tempting and cheap, but snapshots of generated
   code rot and get blindly updated. Decide whether they are allowed, and if so where.
-- **Determinism as a test.** If ticket 10 says byte-identical output, that is directly
-  assertable: build twice, compare. Cheap and catches a whole class of bugs.
+- **Determinism as a test.** [Ticket 10](./10-build-entry-point-and-vfs.md) answered yes,
+  and in the **strong** form: byte-identical output for identical file contents,
+  _independent of host_. That sharpens this bullet — **"build twice, compare" is not
+  sufficient**, because it holds under the weak guarantee too. The test has to build the
+  same fixture through two virtual filesystems whose `entries()` enumerate in **different
+  orders** and assert byte equality, since host enumeration order leaking into output is
+  the exact failure the strong guarantee exists to prevent. Ticket 10 handed this here as
+  a named obligation.
 - **What we do not test in v0**, stated explicitly, so gaps are decisions rather than
   oversights.

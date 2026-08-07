@@ -231,6 +231,19 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   `(request, context)`; no loaders. NOTES #6 closed as **unanswerable** — constraint 8
   plus the untyped reference form make a params-versus-path check impossible. Recorded as
   [ADR-0005](../../docs/adr/0005-the-host-evaluates-the-config-before-the-build.md).
+- [The build entry point and the virtual filesystem interface](./issues/10-build-entry-point-and-vfs.md)
+  — the virtual filesystem is a **synchronous snapshot** the host completes before `build`
+  is called, exposing exactly two methods (`entries()`, `read()`); the build derives
+  directory existence, `realpath`, decoding and normalisation from it, so **hosts implement
+  no path semantics at all**. Departs from research §8.1 deliberately: the snapshot makes
+  `realpath` a map lookup and makes the real-paths precondition cost duplicated bytes.
+  Paths are root-relative with `""` as the root, which makes the resolution walks terminate
+  **structurally**. Reads return **bytes**; the build decodes UTF-8. `build` returns a
+  discriminated result carrying every diagnostic from the failing phase — batch diagnostics
+  because agents are first-class users — and throws only on ursprung's own invariant
+  violations. **Output is byte-identical independent of host**, bought by sorting the
+  enumeration at handover; no cancellation signal and no budget in v0. Recorded as
+  [ADR-0006](../../docs/adr/0006-the-virtual-filesystem-is-a-synchronous-snapshot.md).
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
@@ -266,12 +279,18 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
   [ticket 08](./issues/08-route-and-config-authoring-api.md), which lets one route carry
   both page fields and an `api` map: the choice is now RPC versus the page's own
   `api.POST` at its own URL, rather than RPC versus a separate API route somewhere else.
-- **Build diagnostics.** Error message format, source positions, and how a build error
-  survives having no scope model to point at.
+- **Build diagnostics.** Narrowed by [ticket 10](./issues/10-build-entry-point-and-vfs.md):
+  diagnostics are **returned as an array** on a discriminated result, collected across the
+  phase that failed, and distinct from a `throw`, which now means ursprung itself is broken.
+  What remains is the `Diagnostic` shape — message format, source positions, and how a build
+  error survives having no scope model to point at.
 - **Package layout.** The exact subpath export surface of the published `ursprung`
   package, once the runtimes are known.
 - **Static assets.** The demo app needs _something_ for files that aren't TypeScript,
-  even with no stylesheet pipeline.
+  even with no stylesheet pipeline. [Ticket 10](./issues/10-build-entry-point-and-vfs.md)
+  removed the interface obstacle — reads and outputs are both `Uint8Array`, so a
+  non-TypeScript file is already representable end to end. What remains is which files are
+  collected, how they are named, and who serves them.
 
 ## Out of scope
 
