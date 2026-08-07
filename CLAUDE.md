@@ -85,7 +85,15 @@ Two things about `oxlint.config.ts` are easy to get wrong:
 - The `import` plugin contributes **no rules to `correctness`**, so adding it to
   `plugins` is a no-op on its own. Every `import/` rule that should run has to be
   named in `rules`. Enabled today: `no-cycle`, `no-self-import`,
-  `no-mutable-exports`, `no-duplicates`, `no-empty-named-blocks`, `first`.
+  `no-mutable-exports`, `no-duplicates`, `no-empty-named-blocks`, `first`,
+  `consistent-type-specifier-style`.
+
+Type imports use the **inline** form — `import { type Foo } from "./foo.ts"`,
+not `import type { Foo }`. The mode is spelled out in the config on purpose:
+oxlint defaults `consistent-type-specifier-style` to `prefer-top-level`, the
+opposite of eslint-plugin-import upstream, so writing the rule bare would
+silently enforce the other style. `oxlint --fix` converts existing imports, and
+`oxfmt` tidies the spacing the fix leaves behind.
 
 Import _resolution_ is not oxlint's job here — there is no `import/no-unresolved`
 rule in oxlint, and `import/named` does not fire on missing named exports. `tsc`

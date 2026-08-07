@@ -18,5 +18,9 @@ export default defineConfig({
     "import/no-duplicates": "error",
     "import/no-empty-named-blocks": "error",
     "import/first": "error",
+    // `import { type Foo }` over `import type { Foo }`. The mode must be
+    // spelled out: oxlint defaults this rule to `prefer-top-level`, unlike
+    // eslint-plugin-import upstream, whose default is `prefer-inline`.
+    "import/consistent-type-specifier-style": ["error", "prefer-inline"],
   },
 });
