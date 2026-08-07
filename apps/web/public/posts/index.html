@@ -1,27 +1,41 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth antialiased">
+<html lang="en" class="antialiased">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dev log — Ursprung</title>
+    <title>Dev log — ursprung</title>
     <meta
       name="description"
-      content="Notes from building Ursprung, a full-stack TypeScript framework written from scratch for AI agents."
+      content="Notes from building ursprung, a full-stack TypeScript framework written from scratch for AI agents."
     />
-    <link rel="preconnect" href="https://rsms.me/" />
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body
     class="min-h-dvh bg-stone-50 font-sans text-stone-700 dark:bg-stone-950 dark:text-stone-300"
   >
-    <div class="isolate">
-      <header class="pt-10 sm:pt-14">
-        <div class="mx-auto flex max-w-3xl items-center justify-between gap-x-4 px-6 text-sm">
+    <!-- Same origin-axis structure as the index document in `apps/web/src/index.ts`.
+         The two share a look but no template, so changes have to be mirrored by hand. -->
+    <div class="isolate mx-auto max-w-3xl px-6">
+      <header class="relative py-12 sm:py-16">
+        <!-- The axis starts at the origin mark and runs down. Nothing precedes the
+             origin, so this segment is anchored at the mark rather than the page top;
+             the mark sits at the header's vertical centre because its padding is
+             symmetric. -->
+        <div
+          class="absolute top-1/2 bottom-0 left-0 w-px bg-stone-950/10 dark:bg-white/10"
+          aria-hidden="true"
+        ></div>
+        <div class="relative flex items-center justify-between gap-x-4 pl-8 sm:pl-12">
+          <span
+            class="absolute top-1/2 left-0 flex size-6 -translate-1/2 items-center justify-center rounded-full bg-stone-50 ring-1 ring-amber-600/30 dark:bg-stone-950 dark:ring-amber-500/30"
+            aria-hidden="true"
+          >
+            <span class="size-2 rounded-full bg-amber-600 dark:bg-amber-500"></span>
+          </span>
           <a
             href="/"
             aria-label="Homepage"
-            class="inline-flex items-center gap-x-2 font-semibold text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50"
+            class="inline-flex items-center gap-x-2 font-semibold tracking-tight text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50"
           >
             <svg viewBox="0 0 16 16" class="size-4 h-lh shrink-0 fill-current" aria-hidden="true">
               <path
@@ -30,42 +44,57 @@
                 d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L4.81 7h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z"
               />
             </svg>
-            Ursprung
+            ursprung
           </a>
         </div>
       </header>
 
-      <main>
-        <section class="pt-16 pb-12 sm:pt-24 sm:pb-16">
-          <div class="mx-auto max-w-3xl px-6">
-            <p class="font-mono text-sm tracking-wide text-amber-700 uppercase dark:text-amber-500">
-              Dev log
-            </p>
-            <h1
-              class="mt-3 max-w-[30ch] text-4xl font-semibold tracking-tight text-balance text-stone-900 sm:text-5xl dark:text-stone-50"
-            >
-              Building in the open
-            </h1>
-            <p class="mt-6 max-w-[48ch] text-lg/8 text-pretty text-stone-600 dark:text-stone-400">
-              Notes from building Ursprung — the decisions taken, the research that changed them,
-              and the parts that are still open. Posts are served as plain Markdown.
-            </p>
-          </div>
-        </section>
+      <div class="relative">
+        <div
+          class="absolute inset-y-0 left-0 w-px bg-stone-950/10 dark:bg-white/10"
+          aria-hidden="true"
+        ></div>
 
-        <section class="pb-20 sm:pb-28">
-          <div class="mx-auto max-w-3xl px-6">
+        <main>
+          <section class="pb-16 sm:pb-24">
+            <div class="relative pl-8 sm:pl-12">
+              <span
+                class="absolute top-2.5 left-0 size-1.5 -translate-1/2 rounded-full bg-stone-950/40 ring-2 ring-stone-50 dark:bg-white/40 dark:ring-stone-950"
+                aria-hidden="true"
+              ></span>
+              <p
+                class="font-mono text-sm tracking-wide text-amber-700 uppercase dark:text-amber-500"
+              >
+                Dev log
+              </p>
+              <h1
+                class="mt-4 max-w-[30ch] text-4xl font-semibold tracking-tight text-balance text-stone-900 sm:text-5xl dark:text-stone-50"
+              >
+                Notes from the origin
+              </h1>
+              <p class="mt-6 max-w-[48ch] text-lg/8 text-pretty text-stone-600 dark:text-stone-400">
+                What was decided while building ursprung, what the research changed, and what is
+                still open. Every post is served as plain Markdown.
+              </p>
+            </div>
+          </section>
+
+          <section class="pb-16 sm:pb-24">
             <h2 class="sr-only">Posts</h2>
-            <ol role="list" class="divide-y divide-stone-950/10 dark:divide-white/10">
-              <li class="py-10 first:pt-0 last:pb-0">
+            <ol role="list" class="flex flex-col gap-14 sm:gap-16">
+              <li class="relative pl-8 sm:pl-12">
+                <span
+                  class="absolute top-2.5 left-0 size-1.5 -translate-1/2 rounded-full bg-stone-950/40 ring-2 ring-stone-50 dark:bg-white/40 dark:ring-stone-950"
+                  aria-hidden="true"
+                ></span>
                 <article>
                   <p class="font-mono text-sm text-stone-500 tabular-nums dark:text-stone-400">
                     <time datetime="2026-08-07">2026-08-07</time>
                   </p>
-                  <h3 class="mt-2 max-w-[40ch] text-xl font-semibold tracking-tight text-balance">
+                  <h3 class="mt-2 max-w-[46ch] text-xl font-semibold tracking-tight text-balance">
                     <a
                       href="/posts/2026-08-07-twenty-four-questions-before-code.md"
-                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-amber-500"
+                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-stone-950/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-white/60"
                     >
                       Twenty-four questions before the first line of code
                     </a>
@@ -79,15 +108,19 @@
                 </article>
               </li>
 
-              <li class="py-10 first:pt-0 last:pb-0">
+              <li class="relative pl-8 sm:pl-12">
+                <span
+                  class="absolute top-2.5 left-0 size-1.5 -translate-1/2 rounded-full bg-stone-950/40 ring-2 ring-stone-50 dark:bg-white/40 dark:ring-stone-950"
+                  aria-hidden="true"
+                ></span>
                 <article>
                   <p class="font-mono text-sm text-stone-500 tabular-nums dark:text-stone-400">
                     <time datetime="2026-08-07">2026-08-07</time>
                   </p>
-                  <h3 class="mt-2 max-w-[40ch] text-xl font-semibold tracking-tight text-balance">
+                  <h3 class="mt-2 max-w-[46ch] text-xl font-semibold tracking-tight text-balance">
                     <a
                       href="/posts/2026-08-07-written-from-scratch-for-agents.md"
-                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-amber-500"
+                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-stone-950/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-white/60"
                     >
                       Written from scratch, for agents
                     </a>
@@ -95,21 +128,25 @@
                   <p
                     class="mt-3 max-w-[64ch] text-base/7 text-pretty text-stone-600 sm:text-sm/6 dark:text-stone-400"
                   >
-                    Ursprung's primary users are meant to be AI agents, which licenses design
+                    ursprung's primary users are meant to be AI agents, which licenses design
                     decisions that would be unreasonable to ask of a human developer.
                   </p>
                 </article>
               </li>
 
-              <li class="py-10 first:pt-0 last:pb-0">
+              <li class="relative pl-8 sm:pl-12">
+                <span
+                  class="absolute top-2.5 left-0 size-1.5 -translate-1/2 rounded-full bg-stone-950/40 ring-2 ring-stone-50 dark:bg-white/40 dark:ring-stone-950"
+                  aria-hidden="true"
+                ></span>
                 <article>
                   <p class="font-mono text-sm text-stone-500 tabular-nums dark:text-stone-400">
                     <time datetime="2026-08-07">2026-08-07</time>
                   </p>
-                  <h3 class="mt-2 max-w-[40ch] text-xl font-semibold tracking-tight text-balance">
+                  <h3 class="mt-2 max-w-[46ch] text-xl font-semibold tracking-tight text-balance">
                     <a
                       href="/posts/2026-08-07-two-workspaces-no-build-step.md"
-                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-amber-500"
+                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-stone-950/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-white/60"
                     >
                       Two workspaces, no build step
                     </a>
@@ -117,30 +154,34 @@
                   <p
                     class="mt-3 max-w-[64ch] text-base/7 text-pretty text-stone-600 sm:text-sm/6 dark:text-stone-400"
                   >
-                    Ursprung's package ships TypeScript source straight to its consumer, which makes
+                    ursprung's package ships TypeScript source straight to its consumer, which makes
                     the dev loop instant and makes publishing to npm a problem for later.
                   </p>
                 </article>
               </li>
             </ol>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
 
-      <footer class="border-t border-stone-950/10 py-10 dark:border-white/10">
-        <div
-          class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 text-base/7 text-stone-500 sm:text-sm/6"
-        >
-          <p>Ursprung is open source and built in public.</p>
-          <p>
-            <a
-              href="https://github.com/bndkt/ursprung"
-              class="underline decoration-stone-950/25 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:decoration-white/25 dark:hover:decoration-amber-500"
-              >GitHub</a
-            >
-          </p>
-        </div>
-      </footer>
+        <footer class="py-12">
+          <div
+            class="relative flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pl-8 text-base/7 text-stone-500 sm:pl-12 sm:text-sm/6"
+          >
+            <span
+              class="absolute top-1/2 left-0 size-1.5 -translate-1/2 rounded-full bg-stone-950/40 ring-2 ring-stone-50 dark:bg-white/40 dark:ring-stone-950"
+              aria-hidden="true"
+            ></span>
+            <p>ursprung is open source and built in the open.</p>
+            <p>
+              <a
+                href="https://github.com/bndkt/ursprung"
+                class="underline decoration-stone-950/25 underline-offset-4 hover:decoration-stone-950/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:decoration-white/25 dark:hover:decoration-white/60"
+                >GitHub</a
+              >
+            </p>
+          </div>
+        </footer>
+      </div>
     </div>
   </body>
 </html>

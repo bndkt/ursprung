@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## The name is lowercase
+
+**ursprung** is always written lowercase — in prose, in headings, in UI copy, in
+commit messages, in `<title>` tags, at the start of a sentence. Never "Ursprung",
+never "URSPRUNG". It matches the package name, so `${name}` from the library can
+be rendered directly as the wordmark.
+
+The one exception is a German sentence quoting the noun itself, where the
+language capitalises every noun — but that is quoting the word, not naming the
+project, and it has not come up yet.
+
 ## Commands
 
 All commands run from the repo root unless noted. Bun is the only toolchain for
@@ -113,11 +124,11 @@ the repo's only compile-to-a-file build step, and it is deliberately small:
   the index document's markup, which is a template literal in the Worker
   entrypoint rather than a file under `public/`; without it every class used only
   on `/` is dropped from the output.
-- The `@theme` block registers `--font-sans` as InterVariable ahead of a system
-  stack, with `--font-sans--font-feature-settings` enabling Inter's character
-  variants. The font itself is loaded by a `<link>` to `rsms.me/inter` in each
-  document's `<head>` — registering it in `@theme` does not fetch it, so a new
-  document needs both.
+- The `@theme` block sets `--font-sans` and `--font-mono` to system stacks. This
+  site loads **no webfont** and should not start: no `<link>` to a font host, no
+  `@import url()`, no self-hosted `@font-face`. The ui.sh typography guideline
+  says to always use InterVariable; that rule is overridden here on purpose, so
+  do not re-add it when following the skill.
 - `public/styles.css` is the output. It is **gitignored** — `build:css` runs as
   the first step of `dev`, `deploy` and `deploy:preview`, so every environment
   that serves the Worker generates it first. Nothing commits it, and nothing
@@ -133,6 +144,13 @@ Both documents are styled with the [ui.sh](https://ui.sh) `design` skill's
 guidelines. That skill is installed globally under `$HOME/.claude/skills/design`
 and is not vendored into this repo, so it is not covered by `skills-lock.json` or
 `bun run skills:update`.
+
+The layout of both is one idea taken from the name — an **origin axis**. A single
+hairline runs the full length of the page, the origin is marked at its top with
+the only saturated colour on the site, and every section, and every post, hangs
+off it as a node. Everything else is stone neutrals; amber is spent on the origin
+mark and on focus rings, nowhere else. Adding a section means adding a node, not
+a card.
 
 ### Deployment
 
