@@ -1,120 +1,145 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth antialiased">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ursprung — dev log</title>
+    <title>Dev log — Ursprung</title>
     <meta
       name="description"
       content="Notes from building Ursprung, a full-stack TypeScript framework written from scratch for AI agents."
     />
+    <link rel="preconnect" href="https://rsms.me/" />
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body
-    class="min-h-screen bg-stone-50 font-sans text-stone-800 antialiased dark:bg-stone-950 dark:text-stone-300"
+    class="min-h-dvh bg-stone-50 font-sans text-stone-700 dark:bg-stone-950 dark:text-stone-300"
   >
-    <div class="mx-auto max-w-2xl px-6 py-16 sm:py-24">
-      <header class="mb-16">
-        <p class="font-mono text-xs tracking-[0.2em] text-amber-700 uppercase dark:text-amber-500">
-          Dev log
-        </p>
-        <h1
-          class="mt-3 text-4xl font-semibold tracking-tight text-stone-900 sm:text-5xl dark:text-stone-50"
-        >
-          Ursprung
-        </h1>
-        <p class="mt-4 text-lg leading-relaxed text-stone-600 dark:text-stone-400">
-          A full-stack TypeScript framework written from scratch — its own bundler, its own JSX
-          runtime, its own type stripping — targeting Cloudflare Workers, with AI agents as its
-          first-class users.
-        </p>
+    <div class="isolate">
+      <header class="pt-10 sm:pt-14">
+        <div class="mx-auto flex max-w-3xl items-center justify-between gap-x-4 px-6 text-sm">
+          <a
+            href="/"
+            aria-label="Homepage"
+            class="inline-flex items-center gap-x-2 font-semibold text-stone-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50"
+          >
+            <svg viewBox="0 0 16 16" class="size-4 h-lh shrink-0 fill-current" aria-hidden="true">
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M7.78 12.53a.75.75 0 0 1-1.06 0L2.47 8.28a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 1.06L4.81 7h7.44a.75.75 0 0 1 0 1.5H4.81l2.97 2.97a.75.75 0 0 1 0 1.06Z"
+              />
+            </svg>
+            Ursprung
+          </a>
+        </div>
       </header>
 
       <main>
-        <h2 class="sr-only">Posts</h2>
-        <ol class="divide-y divide-stone-200 dark:divide-stone-800">
-          <li class="py-8 first:pt-0 last:pb-0">
-            <article>
-              <time
-                datetime="2026-08-07"
-                class="font-mono text-xs tracking-wider text-stone-500 dark:text-stone-500"
-              >
-                2026-08-07
-              </time>
-              <h3 class="mt-2 text-xl font-semibold tracking-tight">
-                <a
-                  href="/posts/2026-08-07-twenty-four-questions-before-code.md"
-                  class="text-stone-900 underline decoration-stone-300 decoration-1 underline-offset-4 transition-colors hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-stone-700 dark:hover:decoration-amber-500"
-                >
-                  Twenty-four questions before the first line of code
-                </a>
-              </h3>
-              <p class="mt-3 leading-relaxed text-stone-600 dark:text-stone-400">
-                Planning v0 as a map of open decisions rather than a task list, and the four
-                research findings that changed the plan before any of it was built.
-              </p>
-            </article>
-          </li>
+        <section class="pt-16 pb-12 sm:pt-24 sm:pb-16">
+          <div class="mx-auto max-w-3xl px-6">
+            <p class="font-mono text-sm tracking-wide text-amber-700 uppercase dark:text-amber-500">
+              Dev log
+            </p>
+            <h1
+              class="mt-3 max-w-[30ch] text-4xl font-semibold tracking-tight text-balance text-stone-900 sm:text-5xl dark:text-stone-50"
+            >
+              Building in the open
+            </h1>
+            <p class="mt-6 max-w-[48ch] text-lg/8 text-pretty text-stone-600 dark:text-stone-400">
+              Notes from building Ursprung — the decisions taken, the research that changed them,
+              and the parts that are still open. Posts are served as plain Markdown.
+            </p>
+          </div>
+        </section>
 
-          <li class="py-8 first:pt-0 last:pb-0">
-            <article>
-              <time
-                datetime="2026-08-07"
-                class="font-mono text-xs tracking-wider text-stone-500 dark:text-stone-500"
-              >
-                2026-08-07
-              </time>
-              <h3 class="mt-2 text-xl font-semibold tracking-tight">
-                <a
-                  href="/posts/2026-08-07-written-from-scratch-for-agents.md"
-                  class="text-stone-900 underline decoration-stone-300 decoration-1 underline-offset-4 transition-colors hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-stone-700 dark:hover:decoration-amber-500"
-                >
-                  Written from scratch, for agents
-                </a>
-              </h3>
-              <p class="mt-3 leading-relaxed text-stone-600 dark:text-stone-400">
-                Ursprung's primary users are meant to be AI agents, which licenses design decisions
-                that would be unreasonable to ask of a human developer.
-              </p>
-            </article>
-          </li>
+        <section class="pb-20 sm:pb-28">
+          <div class="mx-auto max-w-3xl px-6">
+            <h2 class="sr-only">Posts</h2>
+            <ol role="list" class="divide-y divide-stone-950/10 dark:divide-white/10">
+              <li class="py-10 first:pt-0 last:pb-0">
+                <article>
+                  <p class="font-mono text-sm text-stone-500 tabular-nums dark:text-stone-400">
+                    <time datetime="2026-08-07">2026-08-07</time>
+                  </p>
+                  <h3 class="mt-2 max-w-[40ch] text-xl font-semibold tracking-tight text-balance">
+                    <a
+                      href="/posts/2026-08-07-twenty-four-questions-before-code.md"
+                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-amber-500"
+                    >
+                      Twenty-four questions before the first line of code
+                    </a>
+                  </h3>
+                  <p
+                    class="mt-3 max-w-[64ch] text-base/7 text-pretty text-stone-600 sm:text-sm/6 dark:text-stone-400"
+                  >
+                    Planning v0 as a map of open decisions rather than a task list, and the four
+                    research findings that changed the plan before any of it was built.
+                  </p>
+                </article>
+              </li>
 
-          <li class="py-8 first:pt-0 last:pb-0">
-            <article>
-              <time
-                datetime="2026-08-07"
-                class="font-mono text-xs tracking-wider text-stone-500 dark:text-stone-500"
-              >
-                2026-08-07
-              </time>
-              <h3 class="mt-2 text-xl font-semibold tracking-tight">
-                <a
-                  href="/posts/2026-08-07-two-workspaces-no-build-step.md"
-                  class="text-stone-900 underline decoration-stone-300 decoration-1 underline-offset-4 transition-colors hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-stone-700 dark:hover:decoration-amber-500"
-                >
-                  Two workspaces, no build step
-                </a>
-              </h3>
-              <p class="mt-3 leading-relaxed text-stone-600 dark:text-stone-400">
-                Ursprung's package ships TypeScript source straight to its consumer, which makes the
-                dev loop instant and makes publishing to npm a problem for later.
-              </p>
-            </article>
-          </li>
-        </ol>
+              <li class="py-10 first:pt-0 last:pb-0">
+                <article>
+                  <p class="font-mono text-sm text-stone-500 tabular-nums dark:text-stone-400">
+                    <time datetime="2026-08-07">2026-08-07</time>
+                  </p>
+                  <h3 class="mt-2 max-w-[40ch] text-xl font-semibold tracking-tight text-balance">
+                    <a
+                      href="/posts/2026-08-07-written-from-scratch-for-agents.md"
+                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-amber-500"
+                    >
+                      Written from scratch, for agents
+                    </a>
+                  </h3>
+                  <p
+                    class="mt-3 max-w-[64ch] text-base/7 text-pretty text-stone-600 sm:text-sm/6 dark:text-stone-400"
+                  >
+                    Ursprung's primary users are meant to be AI agents, which licenses design
+                    decisions that would be unreasonable to ask of a human developer.
+                  </p>
+                </article>
+              </li>
+
+              <li class="py-10 first:pt-0 last:pb-0">
+                <article>
+                  <p class="font-mono text-sm text-stone-500 tabular-nums dark:text-stone-400">
+                    <time datetime="2026-08-07">2026-08-07</time>
+                  </p>
+                  <h3 class="mt-2 max-w-[40ch] text-xl font-semibold tracking-tight text-balance">
+                    <a
+                      href="/posts/2026-08-07-two-workspaces-no-build-step.md"
+                      class="text-stone-900 underline decoration-stone-950/20 decoration-1 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:text-stone-50 dark:decoration-white/20 dark:hover:decoration-amber-500"
+                    >
+                      Two workspaces, no build step
+                    </a>
+                  </h3>
+                  <p
+                    class="mt-3 max-w-[64ch] text-base/7 text-pretty text-stone-600 sm:text-sm/6 dark:text-stone-400"
+                  >
+                    Ursprung's package ships TypeScript source straight to its consumer, which makes
+                    the dev loop instant and makes publishing to npm a problem for later.
+                  </p>
+                </article>
+              </li>
+            </ol>
+          </div>
+        </section>
       </main>
 
-      <footer
-        class="mt-16 border-t border-stone-200 pt-8 text-sm text-stone-500 dark:border-stone-800 dark:text-stone-500"
-      >
-        <p>
-          Posts are served as Markdown.
-          <a
-            href="https://github.com/bndkt/ursprung"
-            class="underline decoration-stone-300 underline-offset-4 transition-colors hover:text-stone-800 hover:decoration-amber-600 dark:decoration-stone-700 dark:hover:text-stone-300 dark:hover:decoration-amber-500"
-            >Source on GitHub</a
-          >.
-        </p>
+      <footer class="border-t border-stone-950/10 py-10 dark:border-white/10">
+        <div
+          class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-6 text-base/7 text-stone-500 sm:text-sm/6"
+        >
+          <p>Ursprung is open source and built in public.</p>
+          <p>
+            <a
+              href="https://github.com/bndkt/ursprung"
+              class="underline decoration-stone-950/25 underline-offset-4 hover:decoration-amber-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-600 dark:decoration-white/25 dark:hover:decoration-amber-500"
+              >GitHub</a
+            >
+          </p>
+        </div>
       </footer>
     </div>
   </body>
