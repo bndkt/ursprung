@@ -7,6 +7,19 @@ Map: [Ursprung v0](../map.md)
 
 ## Question
 
+> **Premise changed 2026-08-07 — read the map's Pending amendments first.** This ticket
+> was written when there was one Server bundle and one emit strategy. The maintainer has
+> since proposed that the server emit **real ESM modules linked by workerd's own module
+> registry** — a root entrypoint, one module per Route, shared modules emitted once. If
+> ticket 27 confirms that is possible, **everything below applies only to the client**,
+> and the hard part of this ticket disappears on the server: real modules get module
+> scope for free, so no renaming and no scope model are needed there at all.
+>
+> This ticket then owns **two** emit strategies rather than one: flat concatenation for
+> Route bundles, and module-per-file for the server. Decide whether they share any
+> machinery or are frankly separate emitters. If ticket 27 comes back negative, the
+> amendment lapses and the original framing below stands unchanged.
+
 Two locked constraints are in tension and this ticket resolves it. Constraint 10: one
 self-contained flat ESM file per bundle, modules concatenated in topological order with
 imports rewritten to local bindings. Constraint 8: no scope or binding model in the

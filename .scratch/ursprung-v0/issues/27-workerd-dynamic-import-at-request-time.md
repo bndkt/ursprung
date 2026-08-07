@@ -47,10 +47,12 @@ Confirmed this session against developers.cloudflare.com:
   request to that Route — turning a startup problem into a per-Route latency cliff. That
   changes whether the proposal is a win at all.
 - Does workerd's module registry give **one instance per specifier**, so that two Route
-  modules importing the same shared module share one instance? This decides the
-  self-contained-versus-shared fork on constraint 10, and it is exactly the hazard ticket
-  02 found: two copies of the signal polyfill are two disjoint graphs, and the failure is
-  silent.
+  modules importing the same shared module share one instance? **This one is now
+  load-bearing.** The maintainer has decided the server extracts shared modules rather
+  than duplicating them (second pending amendment on the map), and extraction is only
+  safe if the registry guarantees a single instance. If it does not, two Route modules
+  importing the signal polyfill get two disjoint graphs and the failure is silent —
+  exactly what ticket 02 found on the client.
 - Does `no_bundle` upload interact with dynamic import at all — are dynamically-imported
   modules discovered by `find_additional_modules`, given imports are **not** followed
   (ticket 05)? Discovery is by glob, so probably yes, but confirm.

@@ -90,14 +90,39 @@ Route**, which the root imports lazily once the router has matched. Constraint 1
 bundles. What changes is `CONTEXT.md`'s definition of **Server bundle** as "the single
 output containing all code that runs on the server".
 
-Blocked on [ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md): whether
-workerd permits `import()` inside a `fetch` handler at all. **Not folded in until that
-research lands** — if it comes back negative the proposal is not implementable and the
-existing model stands. One sub-question rides along and is genuinely open: whether each
-per-Route server entrypoint is self-contained with duplicated shared code, or whether
-shared code is extracted into a common module — the latter contradicts constraint 10's
-"no shared extraction" but avoids ticket 02's silent two-copies-of-the-polyfill failure,
-now a server-side hazard rather than only a client one.
+**Proposed 2026-08-07 — constraint 10 splits by side; the server gets shared
+extraction.** Follows directly from the amendment above, and settles the fork it left
+open. Constraint 10 currently forbids shared extraction everywhere. The maintainer's call
+is that the server needs it. Proposed replacement for constraint 10:
+
+> **Client output:** one self-contained ESM file per Route bundle. No chunks, no shared
+> extraction, no runtime loader — the browser has none and Ursprung will not ship one.
+> Duplication across Route bundles is accepted.
+>
+> **Server output:** real ESM modules, linked by workerd's own module registry — a root
+> entrypoint, one module per Route, and shared modules emitted once rather than
+> duplicated into each. Ursprung ships no loader here either: workerd is the loader.
+>
+> Circular imports are an error on both sides.
+
+Two things worth recording about why, because the obvious reason is not the load-bearing
+one. Ticket 02's silent two-copies-of-the-polyfill failure does **not** force this — the
+bundler could inline each Route's whole ancestor chain into its own entrypoint, keeping
+one copy live per request. What forces it is **upload size**: N Route entrypoints each
+carrying a full copy of renderer, signals and capnweb, against a total script-size limit.
+
+The second, larger consequence is that this **removes ticket 14's hardest half on the
+server**. Flat concatenation needs every import rewritten to a local binding with no
+binding model to dodge collisions with; real ESM modules get module scope for free. The
+client still needs the flat path, so ticket 14 now owns two emit strategies rather than
+one harder one.
+
+Both amendments are blocked on
+[ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md): whether workerd
+permits `import()` inside a `fetch` handler at all, and whether its module registry
+guarantees one instance per specifier — extraction is only safe if it does. **Neither is
+folded in until that research lands.** If 27 comes back negative on dynamic import, the
+existing single-Server-bundle model stands and both amendments lapse together.
 
 Previously: constraints 8 and 15 were both amended on 2026-08-07, from findings in
 [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
