@@ -48,3 +48,27 @@ repo's own Bun `node_modules` is symlinks into `.bun/<name>@<ver>/node_modules/`
 VFS interface needs **directory existence, a declared root, and a way to resolve links** —
 not just `readFile`. A VFS that mirrors a symlinked tree without resolving links returns
 the wrong dependencies and the wrong `"type"`, silently.
+
+## Input from ticket 08 — decided, not open
+
+[Ticket 08](./08-route-and-config-authoring-api.md) settled where the build *starts*:
+
+- **The Config file is evaluated by the host, before the build.** `ursprung build`
+  evaluates `ursprung.config.ts` with a native `import()` — Node ≥22.18 strips types
+  natively, Bun runs `.ts` directly, and no esbuild or loader hook is involved. Wrangler
+  does exactly this for its own config; its `registerHooks` machinery exists only for
+  watch-mode cache-busting (which constraint 11 rules out) and the `cf-worker` import
+  attribute.
+- **The build function receives `{ vfs, config }`**, where `config` is already plain
+  evaluated data. It touches no Node API and performs no evaluation, so **constraint 4 is
+  untouched** — a Worker host supplies the evaluated data by whatever means it has
+  (Dynamic Workers via the `worker_loaders` binding is the mechanism, since `eval()` and
+  `new Function()` are disallowed on workerd).
+- **The host normalises evaluated references to VFS-relative paths at the boundary.**
+  Module references are `new URL(specifier, import.meta.url)`, which evaluates to a
+  host-shaped identifier — a `file://` URL under Bun, something else in a Worker. Turning
+  those into VFS paths is the host's job, on the near side of the phase boundary, so the
+  build only ever sees VFS paths.
+
+This ticket still owns the VFS interface itself and the exact signature of the build
+function; it inherits the phase boundary rather than deciding it.

@@ -39,3 +39,20 @@ this ticket. This ticket is about the response, not the component tree.
 
 The rule for status codes on nested routes, the behaviour on a mid-stream throw, and what
 the author writes for the not-found case in the demo app specifically.
+
+## Input from ticket 08 — the hole is yours, intact
+
+[Ticket 08](./08-route-and-config-authoring-api.md) considered **loaders** and declined
+them, so nothing runs before the first flush and this ticket inherits NOTES #7 undiluted.
+
+The reasoning, so it is not re-argued from scratch: the usual case for loaders is
+parallelism, which constraint 12 blunts — in-order streaming blocks at an async
+component's position regardless, and a component can already start a fetch at the top and
+await it later by hand. The strong case is precisely this ticket's problem: a loader runs
+before any markup flushes, so a 404 or redirect discovered while loading can still set a
+status code. That was declined only because deciding a mechanism here, before this ticket
+(and ticket 18 behind it) had done the analysis, is the wrong order.
+
+**A pre-render hook that may short-circuit with a `Response` is therefore open to this
+ticket**, and adding one is additive — v0 has no loader concept, so there is nothing to
+undo.

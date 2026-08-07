@@ -80,3 +80,14 @@ Decide:
   is where both config files must live. Whether that holds under Workers Builds is
   ticket 23, which now blocks this one.
 - **Caching headers and immutability** for client bundles, if we control them.
+
+## Input from ticket 08 — decided, not open
+
+- **The route table must be generated and emitted by the bundler.** The Route file is
+  build input, not a module in the graph (constraint 9's "reached by the graph" excludes
+  it), so the runtime router cannot import it. This is likely an upside: a generated table
+  can carry already-resolved specifiers and pre-sorted specificity instead of re-deriving
+  them per request. See [ticket 08](./08-route-and-config-authoring-api.md), decision 3.
+- **`outDir` is a field on `ursprung.config.ts`.** Ticket 08 put it there provisionally
+  and left its exact meaning — and how it lines up with Wrangler's `assetsDirectory` and
+  entrypoint path — to this ticket.

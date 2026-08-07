@@ -43,3 +43,16 @@ Decide:
 
 `/domain-modeling` applies heavily here: several of these terms go straight into
 `CONTEXT.md`.
+
+## Input from ticket 08 — decided, not open
+
+- **`layout` is a distinct field from `component`.** `layout` wraps its node and
+  everything below it; `component` renders when the node matches exactly. A node may carry
+  both. See [ticket 08](./08-route-and-config-authoring-api.md), decision 5 — the
+  prototype's dual-role `component` could not express a node that both wraps children and
+  has its own content.
+- **`props.children` versus `<Outlet />` is still this ticket's call** (NOTES #5). What
+  ticket 08 fixed is only *which* field supplies the wrapper, not how the wrapper receives
+  the matched child.
+- Components receive `props.params`; layouts additionally receive the matched child.
+  Neither receives `request` by default — that is ticket 25's seam.

@@ -58,3 +58,16 @@ Decide:
 - **What the graph carries for later stages.** Ticket 14 needs topological order; ticket
   20 needs the boundary edges and the exported names on the server side. Decide what the
   graph stores versus what is recomputed.
+
+## Input from ticket 08 — decided, not open
+
+**The Config file and the Route file are outside the graph.** Constraint 9 errors on an
+unsuffixed module *"reached by the graph"*, and the graph is by definition the one built
+**from** the Config file — so the Config file is its root, not a node in it, and the Route
+file is build input evaluated by the host alongside it. Neither carries a side suffix.
+
+The clause that closes the hole without a special case: **any module in the graph that
+imports either of them is a constraint 9 error**, since that drags an unsuffixed file into
+the real graph. Constraint 9 itself needs no amendment.
+
+See [ticket 08](./08-route-and-config-authoring-api.md), decision 3.

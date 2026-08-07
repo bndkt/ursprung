@@ -76,25 +76,45 @@ The injected interface through which the build reads every file. The build never
 a real filesystem, so it can run inside a Worker.
 _Avoid_: VFS in prose (fine in code), file adapter
 
+**Build host**:
+Whatever invokes the build. It evaluates the config file, supplies the virtual filesystem
+and writes the output; it is not part of the build.
+_Avoid_: CLI, driver, runner
+
+**Route table**:
+The module the build generates from the evaluated route tree, carrying the route set the
+router matches against at runtime.
+_Avoid_: manifest, route map
+
 ### Application surface
 
 **Config file**:
-The application's single entry point, from which the bundler discovers everything else.
+The application's single entry point, evaluated by the build host before the build begins,
+from which everything else is discovered.
 _Avoid_: manifest, ursprung.json
 
 **Route file**:
-Where the application's routes are declared, discovered by the bundler from the config
-file.
+Where the application's routes are declared, imported by the config file.
+
+**Module reference**:
+How the route file names a module without importing it, resolved against the file that
+wrote it. It is never loaded during evaluation.
+_Avoid_: lazy import, thunk, pointer
 
 **Route**:
 One addressable node in the application's route tree. Nested beneath a root route.
 
 **Page route**:
-A route that renders UI.
+A route that renders UI. One route may be a page route and an API route at once.
 _Avoid_: application route, view
 
 **API route**:
-A route that declares handlers per HTTP method and renders nothing.
+A route that declares handlers per HTTP method.
+
+**Layout**:
+The component a route contributes to wrap itself and every route beneath it — as opposed
+to the component it renders when matched exactly.
+_Avoid_: shell, wrapper, template, slot
 
 **Server component**:
 A component defined in a server module.
