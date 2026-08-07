@@ -1,7 +1,7 @@
 # 02 — TC39 Signals and signal-polyfill
 
 Research findings for [issue 02](../issues/02-tc39-signals-and-polyfill.md).
-Map: [Ursprung v0](../map.md).
+Map: [ursprung v0](../map.md).
 
 ## Method and provenance
 
@@ -274,7 +274,7 @@ outside any computation and inside `untrack`. **[verified]**. Do not test agains
 - `hasSinks` / `hasSources` are the boolean forms. `hasSources(c) === false` means, per
   the README, _"A Computed where hasSources is false will always return the same
   constant."_ That sentence is the single most important line in the proposal for
-  Ursprung — see §7.
+  ursprung — see §7.
 
 ### `watched` / `unwatched`
 
@@ -765,7 +765,7 @@ before ticket 17 locks the reactivity API.
 
 ---
 
-## 9. Implications for Ursprung
+## 9. Implications for ursprung
 
 Checked against the **Locked constraints** on the [map](../map.md). Three genuine
 conflicts, three requirements the spec must absorb, one thing that is fine.
@@ -806,15 +806,15 @@ not been to committee since June 2024, and still has open issues questioning the
 name (#272), the constructor shape (#274), the accessor form (#152) and whether `Computed`
 should be writable (#277).
 
-Nothing here forces a change to constraint 6 — but the spec should record that Ursprung's
+Nothing here forces a change to constraint 6 — but the spec should record that ursprung's
 fine-grained reactivity rests on an unreleased, explicitly-not-production dependency whose
-API names are unsettled, and it should keep the proposal surface behind Ursprung's own
+API names are unsettled, and it should keep the proposal surface behind ursprung's own
 reactivity API (ticket 17) so a rename or a swap for a different implementation is a
 one-module change. `Signal.State`/`Signal.Computed`/`.get()`/`.set()` should not leak into
 the application-facing API or the Resumability payload's vocabulary.
 
 Also: the shipped tarball is Apache-2.0 in the manifest but the majority of the source is
-MIT/Google. Worth a line in whatever licence notice Ursprung ships.
+MIT/Google. Worth a line in whatever licence notice ursprung ships.
 
 ### Conflict — constraint 12 (streaming SSR, in-order) meets module-global effect scheduling
 
@@ -829,7 +829,7 @@ The good news: `activeConsumer` cannot leak across an `await`, because computed 
 synchronous by construction (`.get()` returns `T`, and `consumerBeforeComputation` /
 `consumerAfterComputation` bracket a synchronous call). So Server rendering that reads
 signals is safe from cross-request tracking bleed. The hazard is confined to any _watcher or
-scheduler_ Ursprung declares at module scope.
+scheduler_ ursprung declares at module scope.
 
 **Rule for the spec:** on the server, Server rendering reads signals but installs no Watcher
 and schedules no effects — it is a pull, and it should be an untracked one
@@ -837,21 +837,21 @@ and schedules no effects — it is a pull, and it should be an untracked one
 client runtime, and any Watcher must be owned by something request- or document-scoped,
 never a module-level `let`.
 
-### Requirement — the Resumability payload must carry the graph, and Ursprung must own identity
+### Requirement — the Resumability payload must carry the graph, and ursprung must own identity
 
 Constraint: _"Resumption: the client continuing an application that was rendered on the
 server, without executing the component tree again."_
 
-Signals give Ursprung nothing toward this beyond a data structure that tolerates being built
+Signals give ursprung nothing toward this beyond a data structure that tolerates being built
 in any order:
 
-- No `toJSON`, no id, no serialisation of any kind (§7). **Ursprung must own the id ↔ signal
-  map**; the Resumability payload's node ids are Ursprung's invention, and the client runtime
+- No `toJSON`, no id, no serialisation of any kind (§7). **ursprung must own the id ↔ signal
+  map**; the Resumability payload's node ids are ursprung's invention, and the client runtime
   reconstructs the map before any computed is first read.
 - `introspectSinks` cannot enumerate unwatched dependents, so **the payload cannot be
   produced by walking the graph after Server rendering.** It must be recorded as the graph is
   built, or derived from the build's static knowledge. Ticket 19 should assume the writer
-  side is Ursprung's bookkeeping, not introspection.
+  side is ursprung's bookkeeping, not introspection.
 - **The frozen-constant trap is the single rule the wire format must enforce.** Any
   `Signal.Computed` that is evaluated before its sources are reconstructed becomes a constant
   for the life of the page, silently. Two safe shapes, both verified in §7: a _tripwire_
@@ -869,7 +869,7 @@ in any order:
 
 `signal-polyfill` has **no `exports` field** (§6). A resolver implementing only the modern
 `exports` algorithm cannot resolve it. Constraint 13 says the caller populates the Virtual
-filesystem with package files and Ursprung only reads it — so Ursprung's resolver needs the
+filesystem with package files and ursprung only reads it — so ursprung's resolver needs the
 `main` fallback path. Constraint 14 (ESM only) is satisfied: `"type": "module"`, `dist/index.js`
 is pure ESM with a single named export.
 
@@ -888,15 +888,15 @@ is reachable from `main`, so the TypeScript sources should never enter the graph
   signal-polyfill is a runtime dependency, not a build module, and touches nothing Node-ish
   either way.
 - **Subclassing is available and cheap**, and works with private fields **[verified]**. If
-  Ursprung wants to hang a node id, a `Host` binding or a payload slot off a signal, extending
+  ursprung wants to hang a node id, a `Host` binding or a payload slot off a signal, extending
   `Signal.State` / `Signal.Computed` costs no extra allocation — the proposal lists this as an
   explicit design goal. That is probably a better answer than a parallel `WeakMap`.
 
 ### One thing to decide early
 
 The proposal's `equals` default is `Object.is`, and equality is evaluated **on the way out**
-of a computed. Ursprung's fine-grained bindings will therefore re-run only when a value
+of a computed. ursprung's fine-grained bindings will therefore re-run only when a value
 actually changes identity — which is the desired behaviour for text and attribute bindings,
 and the wrong behaviour for anything holding a mutated object. Ticket 17 should decide whether
-Ursprung's application-facing API exposes `equals` at all, or whether it takes the position
+ursprung's application-facing API exposes `equals` at all, or whether it takes the position
 that signal values are immutable.

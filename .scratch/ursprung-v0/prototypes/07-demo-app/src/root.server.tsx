@@ -28,11 +28,11 @@ export default function RootLayout(props: ComponentProps) {
     <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <title>Ursprung build log</title>
+        <title>ursprung build log</title>
       </head>
       <body>
         <header>
-          <a href="/">Ursprung</a>
+          <a href="/">ursprung</a>
           <nav>
             <a href="/builds">Builds</a>
           </nav>

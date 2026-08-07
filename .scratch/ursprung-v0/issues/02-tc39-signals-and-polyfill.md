@@ -3,11 +3,11 @@
 Type: research
 Status: resolved
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
-Ursprung's reactivity is fine-grained and built on TC39 Signals plus the accompanying
+ursprung's reactivity is fine-grained and built on TC39 Signals plus the accompanying
 polyfill. Ticket 17 designs the application-facing reactivity API and ticket 19 the
 resumability wire format; both need the primitives pinned first.
 
@@ -50,7 +50,7 @@ be built downstream-before-upstream, resolved through a registry, or closed over
 assigned later. That is what Resumability needs. But **first-evaluation** order is not
 free: a computed that is first evaluated while reading no signals records zero sources
 and is then a frozen constant forever, silently, with no error. Two escapes were
-verified; the one that suits Ursprung is an **indirection cell** — a `Signal.State`
+verified; the one that suits ursprung is an **indirection cell** — a `Signal.State`
 holding the current producer, wrapped in a stable `Signal.Computed` — which preserves the
 identity handed to an event handler across the moment a client module's code arrives.
 The proposal's own README carries three never-written TODOs on exactly this ("show how
@@ -76,7 +76,7 @@ Three consequences that land on other tickets:
   primary sources does exactly that, and module scope is per-isolate on Workers. Server
   rendering itself is safe — computed callbacks are synchronous, so tracking cannot leak
   across an `await` — but the recipes are not directly usable.
-- **Ursprung must own signal identity.** There is no `toJSON`, no ids, and
+- **ursprung must own signal identity.** There is no `toJSON`, no ids, and
   `introspectSinks` reports only _watched_ consumers, so the Resumability payload cannot
   be produced by walking the graph after Server rendering (ticket 19). Subclassing
   `Signal.State`/`Computed` with private fields works and is the cheap place to hang a

@@ -232,7 +232,7 @@ rather than evaluating it, and a string says so honestly.
 > **Withdrawn later the same day.** This said the thunks are "never called as
 > written" because constraint 10 forbids a runtime loader. The maintainer has
 > since proposed emitting a module graph on both sides, linked by workerd's
-> registry and the browser's module map. Ursprung still ships no loader — the
+> registry and the browser's module map. ursprung still ships no loader — the
 > hosts have their own — so the thunks stay **real dynamic imports** and the
 > laziness is genuine at runtime. See the map's Pending amendments.
 
@@ -280,6 +280,6 @@ exists before ticket 14 assumes only named imports.
 
 The app root ends up with `ursprung.config.ts`, `cloudflare.config.ts` and
 `wrangler.config.ts`. Worse: constraint 15 pins the permitted `node:*` set as a
-function of the compatibility date, so **Ursprung needs a value that lives in
+function of the compatibility date, so **ursprung needs a value that lives in
 Wrangler's file.** Either it reads Wrangler's experimental config (coupling to an
 unstable format) or it asks for the date twice and the two drift silently.

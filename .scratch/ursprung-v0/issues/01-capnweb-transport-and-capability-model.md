@@ -3,11 +3,11 @@
 Type: research
 Status: resolved
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
-Ursprung uses Cloudflare's **capnweb** for client↔server RPC. Before we can design the
+ursprung uses Cloudflare's **capnweb** for client↔server RPC. Before we can design the
 server-boundary transform (ticket 20), we need the facts about what capnweb actually is
 and what it requires of the code we generate on both sides.
 
@@ -101,7 +101,7 @@ is real. Ticket 04 caught this independently; credit to it.
 
 Two things follow. **Never read a manifest's condition order from the registry API** —
 only from the tarball or the repository — which ticket 13 must encode as a rule, since
-Ursprung reads manifests for a living. And condition _ordering_ is not a thing we
+ursprung reads manifests for a living. And condition _ordering_ is not a thing we
 configure: what we choose is a condition **set**, and the package decides precedence.
 
 _Caveat on this verification:_ the authored order was read from the repository's `main`

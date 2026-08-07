@@ -3,7 +3,7 @@
 Type: grilling
 Status: open
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 Graduated from: [07 — The canonical demo app](./07-canonical-demo-app-prototype.md)
 
 ## Question

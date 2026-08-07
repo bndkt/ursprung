@@ -3,22 +3,22 @@
 Type: task
 Status: open
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 Graduated from: [05 — Wrangler's experimental TypeScript config](./05-wrangler-experimental-config-and-build-contract.md)
 
 ## Question
 
 The deployment flow in the vision rests on one unverified assumption: the developer or
 agent invokes Wrangler, and **Wrangler runs the configured custom build command**, which
-invokes Ursprung. Ticket 05 established that `build: { command, cwd, watchDir }` exists
+invokes ursprung. Ticket 05 established that `build: { command, cwd, watchDir }` exists
 in the experimental TypeScript config and that Wrangler's own source runs it. It also
 found that Cloudflare's documentation states Workers Builds **does not honor** Custom
 Builds — and this repo deploys via Workers Builds (see `CLAUDE.md`).
 
 Both cannot be true in the way we need. If Workers Builds ignores `build.command`, then
-`wrangler deploy` in CI never invokes Ursprung, the output directory is empty or stale,
+`wrangler deploy` in CI never invokes ursprung, the output directory is empty or stale,
 and the deployment flow has to be restructured — most likely by making the Workers Builds
-_deploy command_ itself run Ursprung before Wrangler, which is a different shape from the
+_deploy command_ itself run ursprung before Wrangler, which is a different shape from the
 one the vision describes.
 
 This is a **task**, not a research ticket: the answer is only obtainable by observing a

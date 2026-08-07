@@ -3,7 +3,7 @@
 Type: research
 Status: resolved
 Blocked by: —
-Map: [Ursprung v0](../map.md)
+Map: [ursprung v0](../map.md)
 
 ## Question
 
@@ -58,13 +58,13 @@ from documentation or source.
 error code — TS1294 — and exactly six checker call sites: `enum`, parameter property,
 instantiated namespace/module, `import =`, `export =`, and `<T>expr` assertions. Because
 it is a _semantic_ diagnostic rather than a syntactic one, it cannot be lifted from a
-parse; Ursprung reimplements the check rather than inheriting it.
+parse; ursprung reimplements the check rather than inheriting it.
 
 **This ticket's premise was wrong, and the correction matters.** `erasableSyntaxOnly`
 does **not** reject legacy decorators, standard decorators, or `accessor` — all three
 compile clean. Verified here directly: given a file containing a decorated method, an
 `accessor` field and an `enum`, `tsc` flags only the `enum`. All three are nonetheless
-hard `SyntaxError`s on workerd. So **Ursprung's reject list must be strictly larger than
+hard `SyntaxError`s on workerd. So **ursprung's reject list must be strictly larger than
 TypeScript's**, and "we accept whatever `erasableSyntaxOnly` accepts" — which is roughly
 how the map's constraint 8 is phrased — is not a safe rule. Ticket 11 owns this.
 
@@ -76,13 +76,13 @@ hazard for us: JSX element type arguments are erased by `tsc` but **missed by
 **Stripping is not pure deletion in six places**, each documented with the rule:
 the `f<a>(b)` speculation, `as`/`satisfies` binary regrouping, illegal `??` mixing, ASI
 semicolon injection, and two line-break-sensitive paren moves. Both reference
-implementations still emit invalid JavaScript for `!x as any ** 2` — a bug Ursprung
+implementations still emit invalid JavaScript for `!x as any ** 2` — a bug ursprung
 would inherit by copying them.
 
 **Whitespace-preserving blanking is universal and exact**, which confirms the map's
 decision to ship no source maps in v0: build diagnostics get original positions for free.
 
-**One genuine conflict with the map.** With no type model, Ursprung cannot perform import
+**One genuine conflict with the map.** With no type model, ursprung cannot perform import
 elision. So `verbatimModuleSyntax` semantics have to become a documented hard requirement
 on the application's `tsconfig`, and — importantly for ticket 12 — `import { type A }`
 leaves a live `import {} from "x"` graph edge while `import type { A }` removes it
