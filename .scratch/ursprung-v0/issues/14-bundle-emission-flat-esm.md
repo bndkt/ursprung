@@ -68,3 +68,21 @@ Also decide:
 
 This is a strong candidate for `/prototype`: emit two hand-written bundles by both
 strategies and look at them, rather than arguing in the abstract.
+
+## Handed here by ticket 27
+
+[Ticket 27](./27-workerd-dynamic-import-at-request-time.md) resolved the platform question
+this ticket was blocked on: workerd permits request-time `import()` with no compatibility
+flag, and its registry gives **one instance per resolved specifier**, so the shared-module
+extraction the pending amendment describes is safe on the server as well as the client.
+
+The emitter obligation that follows is narrow and absolute: **one canonical specifier per
+module, with content hashing in the filename and never in a query string.** The registry
+keys on the specifier rather than the file, so emitting the same module under two
+specifiers — including one bare and one query-suffixed — mints two instances, two reactive
+graphs, and a silent freeze. Ticket 02 found this trap on the client; ticket 27 shows the
+emitter can reintroduce it on both sides.
+
+Emitted modules must also carry I/O-free and top-level-await-free top levels; the legacy
+registry hard-fails unsettled top-level await at first import, which is
+first-request-to-that-Route rather than deploy time.

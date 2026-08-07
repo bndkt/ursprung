@@ -140,12 +140,25 @@ single output containing all code that runs on the server" and **Route bundle** 
 output for one route" — both become wrong, and there is no term yet for a shared emitted
 module. That is a `/domain-modeling` pass once ticket 27 reports.
 
-Blocked on [ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md): whether
-workerd permits `import()` inside a `fetch` handler, and whether its registry guarantees
-one instance per specifier. The browser half needs no research — the HTML module map has
-guaranteed both for years — so a negative from 27 would leave the **client** half of this
-amendment standing on its own, with only the server reverting to a single bundle. **Not
-folded in until that research lands.**
+**Unblocked 2026-08-07 — [ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md)
+came back yes, and awaits your approval to fold in.** `import()` inside a `fetch` handler
+is the designed-for path on workerd, with no compatibility flag, and the legacy registry
+gives **one instance per resolved specifier**, so shared-module extraction on the server is
+safe. No fallback is needed; the original constraint 10 does not stand for the server.
+
+Two findings change what the amendment should say, so read them before approving:
+
+- **Lazy `import()` defers evaluation, not compilation.** On the legacy registry workerd
+  V8-compiles *every* uploaded module at startup, imported or not. The amendment's stated
+  server-side rationale — **upload size** — is untouched and still correct. But the
+  adjacent, unstated hope that splitting into N Route modules keeps startup flat as routes
+  are added is **false**, and must not reach the spec.
+- **The key is the resolved specifier, not the file.** `./signals.js?v=2` is a second
+  instance of the same module — ticket 02's silent two-graphs failure, reachable through
+  the emitter. Content-hash the **filename**, never a query string.
+
+The client half never needed research: the HTML module map has guaranteed both properties
+for years.
 
 **Proposed 2026-08-07 — a new constraint 17: the build host evaluates the config; the
 build itself evaluates nothing.** Raised by ticket 08. Proposed wording:
@@ -231,6 +244,18 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   `(request, context)`; no loaders. NOTES #6 closed as **unanswerable** — constraint 8
   plus the untyped reference form make a params-versus-path check impossible. Recorded as
   [ADR-0005](../../docs/adr/0005-the-host-evaluates-the-config-before-the-build.md).
+- [Can workerd import a module lazily, during a request?](./issues/27-workerd-dynamic-import-at-request-time.md)
+  — **yes, no compatibility flag**, established from workerd's source at `22b2a002` plus its
+  test suite; the in-request branch is the *first* one workerd checks. The registry gives
+  **one instance per resolved specifier**, so server-side shared-module extraction is safe —
+  but the key is the **specifier**, not the file, so `?v=2` mints a second instance and the
+  emitter must content-hash filenames only. Evaluation charges to a **third peer budget**,
+  neither startup nor request CPU, whose size is not establishable (workerd's OSS enforcer
+  is a stub); under the experimental `new_module_registry` it charges to request CPU
+  instead, so **v0 designs for the legacy registry**. Unanticipated: lazy import defers
+  **evaluation only — every uploaded module is V8-compiled at startup regardless**, so
+  splitting by Route does not keep startup flat. Three obligations handed to tickets 14
+  and 21.
 - [The build entry point and the virtual filesystem interface](./issues/10-build-entry-point-and-vfs.md)
   — the virtual filesystem is a **synchronous snapshot** the host completes before `build`
   is called, exposing exactly two methods (`entries()`, `read()`); the build derives
