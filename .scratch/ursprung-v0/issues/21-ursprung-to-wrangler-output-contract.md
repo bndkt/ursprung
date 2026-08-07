@@ -91,3 +91,28 @@ Decide:
 - **`outDir` is a field on `ursprung.config.ts`.** Ticket 08 put it there provisionally
   and left its exact meaning — and how it lines up with Wrangler's `assetsDirectory` and
   entrypoint path — to this ticket.
+
+## Handed here by ticket 27 — obligations, not open questions
+
+[Ticket 27](./27-workerd-dynamic-import-at-request-time.md) established that workerd
+permits `import()` at request time and gives one instance per **resolved specifier**.
+Three consequences land on this ticket's contract:
+
+- **One canonical specifier per module, content-hashed in the filename — never a query
+  string.** The registry keys on the resolved specifier, not the file, so `./signals.js`
+  and `./signals.js?v=2` are two instances of one module: two reactive graphs, failing
+  silently, which is ticket 02's trap arriving by a different door. This directly settles
+  this ticket's "client bundle naming" bullet in favour of hashed filenames, and rules out
+  query-string cache-busting outright.
+- **Emitted Route modules must have I/O-free, top-level-await-free top levels.** Both
+  registries evaluate modules with the `IoContext` suppressed, and the legacy registry
+  hard-fails unsettled top-level await. The failure moves from deploy time to
+  first-request-to-that-Route, so it wants a **build-time check** rather than a runtime
+  surprise.
+- **The router should hold the imported namespace, not re-`import()` per request** — the
+  legacy path costs an event-loop yield and a lock re-acquisition each time.
+
+Also relevant to the request-waterfall mitigation this ticket owns: ticket 27 confirms the
+server side is genuinely lazy in *evaluation*, but **every uploaded module is V8-compiled
+at startup regardless**. Splitting by Route does not keep startup flat as routes are added,
+so no part of this contract should be justified on that basis.
