@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy --experimental-new-config",
-    "deploy:preview": "wrangler versions upload --experimental-new-config",
+    "deploy:preview": "WRANGLER_CI_GENERATE_PREVIEW_ALIAS=true wrangler versions upload --experimental-new-config",
     "dev": "wrangler dev --experimental-new-config",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
