@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun --filter ursprung-web dev",
     "start": "bun --filter ursprung-web start",
+    "skills:update": "bunx skills update --project --yes",
     "test": "bun test",
     "typecheck": "bun --filter '*' typecheck"
   },
