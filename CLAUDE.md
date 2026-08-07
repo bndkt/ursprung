@@ -64,6 +64,43 @@ build/dev tooling keys (`minify`, `alias`, `define`, `dev`, …). Worker-shaped
 settings — name, compatibility date, bindings, triggers — belong in
 `cloudflare.config.ts`, and Wrangler errors if they appear in the other file.
 
+The schema is a Zod `strictObject`, so a misspelled key is a hard error rather
+than a silently ignored setting. A dry-run deploy from `apps/web` is the
+cheapest way to validate a config change without shipping it:
+
+```bash
+bun run wrangler deploy --dry-run --experimental-new-config
+```
+
+### Deployment
+
+The Worker is deployed by [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/),
+Cloudflare's Git integration, not from a developer machine. It builds on push to
+`main` with these dashboard settings:
+
+| Setting        | Value                                           |
+| -------------- | ----------------------------------------------- |
+| Root directory | `apps/web`                                      |
+| Build command  | _(empty — no build step)_                       |
+| Deploy command | `npx wrangler deploy --experimental-new-config` |
+| `BUN_VERSION`  | `1.3.11` (build variable)                       |
+
+The root directory has to be `apps/web` rather than the repo root, because
+Wrangler's bin is linked into `apps/web/node_modules/.bin` (Bun links workspace
+member bins there, not at the root) and `npx wrangler` would otherwise miss it.
+Running `bun install` from `apps/web` is still correct — Bun walks up to the
+workspace root, so `ursprung` resolves through the `workspace:*` link.
+
+Two Worker-level settings in `cloudflare.config.ts` back this:
+
+- `domains: ["ursprung.dev"]` becomes a `custom_domain` route. Wrangler creates
+  the domain record on deploy but **not** the zone — `ursprung.dev` must already
+  be an active zone on the account or the deploy fails.
+- `observability` turns on Workers Logs and Traces. `enabled: true` alone only
+  covers logs; tracing is separately opt-in via `traces.enabled`, and stays that
+  way until Cloudflare ships automatic tracing behind a future compatibility
+  date. Both sample at `1` (100%) — worth lowering if traffic ever justifies it.
+
 ### The package ships TypeScript source, not a build artifact
 
 `packages/ursprung` has no build step. Its `exports` map points directly at

@@ -8,8 +8,21 @@ export default defineWorker({
   compatibilityDate: "2026-08-07",
   compatibilityFlags: ["nodejs_compat"],
   entrypoint: "./src/index.ts",
+  // Custom domain. The zone must already exist on the Cloudflare account —
+  // Wrangler creates the domain record on deploy, it does not create the zone.
+  domains: ["ursprung.dev"],
   observability: {
     enabled: true,
-    headSamplingRate: 1,
+    logs: {
+      enabled: true,
+      // Log every invocation, not just those that call console.*.
+      invocationLogs: true,
+      headSamplingRate: 1,
+    },
+    // Tracing is opt-in: `enabled: true` on the parent does not turn it on.
+    traces: {
+      enabled: true,
+      headSamplingRate: 1,
+    },
   },
 });
