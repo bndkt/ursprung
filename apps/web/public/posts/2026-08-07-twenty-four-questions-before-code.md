@@ -6,7 +6,7 @@ date: "2026-08-07"
 
 TypeScript's `erasableSyntaxOnly` flag exists to reject syntax that cannot simply be deleted — `enum`, parameter properties, namespaces with runtime values. Ursprung intends to accept exactly the erasable subset, so the obvious rule to write down is "accept whatever `erasableSyntaxOnly` accepts."
 
-That rule is wrong, and it takes four lines to prove:
+That rule is wrong, and it takes one file to prove:
 
 ```ts
 function log(x: any, c: any) {
@@ -23,7 +23,7 @@ enum E {
 }
 ```
 
-With `erasableSyntaxOnly` on, the compiler flags line 4 and nothing else. Decorators and `accessor` pass. Both are hard `SyntaxError`s on workerd, the runtime Ursprung targets. So the obvious rule produces a parser that cheerfully accepts source the runtime will refuse, and the failure arrives at deploy time rather than build time.
+With `erasableSyntaxOnly` on, the compiler flags the `enum` and nothing else. The decorator and `accessor` pass clean. Both are hard `SyntaxError`s on workerd, the runtime Ursprung targets. So the obvious rule produces a parser that cheerfully accepts source the runtime will refuse, and the failure arrives at deploy time rather than build time.
 
 We found that before writing the parser, which is the entire argument for what follows.
 
