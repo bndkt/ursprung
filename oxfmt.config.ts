@@ -7,5 +7,9 @@ export default defineConfig({
     ".agents/skills/**",
     // Regenerated verbatim by `wrangler dev`; formatting it only creates churn.
     "**/worker-configuration.d.ts",
+    // Agent-written planning documents — maps, tickets and research notes that
+    // sessions append to mechanically. Nothing renders or parses them, so
+    // formatting buys nothing and only produces diff noise.
+    ".scratch/**",
   ],
 });
