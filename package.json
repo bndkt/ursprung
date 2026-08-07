@@ -1,17 +1,29 @@
 {
   "name": "ursprung-monorepo",
   "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "type": "module",
-  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
     "dev": "bun --filter ursprung-web dev",
     "start": "bun --filter ursprung-web start",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "prepare": "husky",
     "skills:update": "bunx skills update --project --yes",
     "test": "bun test",
-    "typecheck": "bun --filter '*' typecheck"
+    "typecheck": "tsc --noEmit && bun --filter '*' typecheck"
   },
   "devDependencies": {
     "@types/bun": "^1.3.11",
+    "husky": "9.1.7",
+    "lint-staged": "17.3.0",
+    "oxfmt": "0.62.0",
+    "oxlint": "1.77.0",
     "typescript": "^5.9.3"
   }
 }
