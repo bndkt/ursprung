@@ -14,6 +14,7 @@ bun test -t "exports the package name"   # one test by name
 bun --filter '*' typecheck       # tsc --noEmit in each workspace
 bun run dev                      # ursprung-web with --hot reload on :3000
 bun run start                    # ursprung-web without reload
+bun run skills:update            # update .agents/skills from skills-lock.json sources
 ```
 
 `bun --filter <workspace-name> <script>` targets a single workspace by its
