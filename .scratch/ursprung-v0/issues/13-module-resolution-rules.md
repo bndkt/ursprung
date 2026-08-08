@@ -88,3 +88,18 @@ modules come from**, given it grows with the compatibility date — is it genera
 workerd, hand-maintained with a pinned date, or read from the application's compatibility
 date at build time? And **what does the error say**, since "use a different package" is
 the only fix and the author needs the chain to know which one.
+
+## Input from ticket 12 — decided, not open
+
+**There are two condition sets, one per side, and this ticket owns both lists.** Ticket 12
+fixed only the consequence for the graph: because a specifier can resolve to different
+files under the two sets, **an edge carries a specifier and not a target**, and traversal
+runs once per side with nodes interned by real path across both runs. Erroring on a
+specifier that resolves differently per side was considered and rejected — it outlaws the
+commonest reason a package ships a `browser` condition at all.
+
+Two further inputs: resolution is over **realpathed** paths (ticket 10), and **first-party
+means no `node_modules` segment in the real path**, which is the test that decides whether
+constraint 9 or constraint 16 applies to a module.
+
+See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 3 and 8.

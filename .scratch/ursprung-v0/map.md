@@ -126,6 +126,30 @@ and **Emitted module**. There is deliberately no collective noun for one side's 
 was already taken and means a Side, not a position in the graph, so a module emitted once
 for several entrypoints is a **Common module**.
 
+**Proposed 2026-08-08 — constraint 10 loses its last sentence: circular imports are not an
+error.** Raised by ticket 12. Proposed change: strike "Circular imports are an error."
+
+The clause could not survive its own justification. Flat concatenation **cannot express a
+cycle** — that is why it was there — and ursprung no longer concatenates. Both hosts own
+cycle semantics natively under TDZ rules, so a first-party cycle that works in workerd or
+the browser works here. The sentence survived the constraint 10 replacement by being
+carried along rather than re-argued, which is the same shape as the source-maps finding
+below: a rule that outlived its reason.
+
+It also removes a failure mode with no remedy. Internal cycles are not rare in real
+packages, and a ban surfaces at integration time, in code the author cannot edit, with
+"drop the dependency" as the only fix.
+
+**The accepted cost is a diagnostic**, not correctness: an accidental first-party cycle is
+easy for an agent to introduce and its TDZ failure is famously hard to read. Cycle
+detection does not disappear — the traversal still needs a visited set — so reporting one
+is cheap to add later.
+
+**What it dissolves.** With cycles legal there is no topological order at all, and real ESM
+needs none because the host owns evaluation order. That removes ticket 14's "topological
+order is underspecified" sub-question rather than answering it; emission ordering reduces
+to being deterministic, so sorting by path is the whole rule.
+
 **Proposed 2026-08-07 — a new constraint 17: the build host evaluates the config; the
 build itself evaluates nothing.** Raised by ticket 08. Proposed wording:
 
@@ -288,6 +312,21 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   `typescript` approved as a test-only dev dependency. **Cost: printing breaks output
   positions**, so ticket 06's "source maps come free" is half void. Recorded as
   [ADR-0007](../../docs/adr/0007-the-emitter-prints-from-the-ast.md).
+- [The module graph data model and two-colour derivation](./issues/12-module-graph-and-two-colour-derivation.md)
+  — **Side and Reach are two fields, not one**: Side is declared and the 3×3 matrix
+  constrains it; Reach is derived and the invariant is about it. One node per **realpathed**
+  path, emission unit is a derived `(node, side)` pair. Matrix: `shared → server` is a
+  **hard error checkable from one file**, `shared → client` legal, `client → server` the
+  boundary, `server → client` legal. An **edge carries a specifier, not a target** — the two
+  sides resolve under different conditions, so traversal runs once per side. An
+  **all-`type` clause is elided**, dissolving ticket 11's §5.7 hazard without a type model,
+  at the cost of `verbatimModuleSyntax` side-effect parity. Server roots are one Root
+  entrypoint plus **self-sufficient** Route entrypoints carrying their ancestor Layout
+  chain; **client roots are the crossing set**, because a per-Route client entrypoint would
+  evaluate eagerly and undo Resumption. Invariant enforced twice, both throwing.
+  **Circular imports become legal** — proposed amendment above. First-party means **no
+  `node_modules` in the real path**, so workspace members declare. Recorded as
+  [ADR-0008](../../docs/adr/0008-the-module-graph-and-the-side-matrix.md).
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
@@ -300,7 +339,14 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
 
 - **The client runtime.** Event delegation, and how a resumed page fetches the code for
   an interaction that hasn't loaded yet. Shape depends entirely on the resumability wire
-  format.
+  format. [Ticket 12](./issues/12-module-graph-and-two-colour-derivation.md) added a
+  second question to this patch and deliberately declined to answer it: **how the browser
+  is told which client modules to load at all**. There is no per-Route client entrypoint —
+  client roots are the modules at a `→ client` crossing, each its own root — because a
+  generated one would evaluate every Client component eagerly, which is the thing
+  Resumption exists to avoid. The graph records per Route which client roots it reaches;
+  who consumes that set, and whether the HTML names modules per request or per Route, is
+  ticket 19's and ticket 21's.
 - **Runtime routing and dispatch.** Narrowed by
   [ticket 08](./issues/08-route-and-config-authoring-api.md): matching, params and
   specificity are decided, and the route table is a generated module rather than the route
@@ -310,10 +356,9 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
   document load. Cheaper to answer once streaming and resumability are pinned. The trap
   found by [ticket 02](./issues/02-tc39-signals-and-polyfill.md) — two Route bundles live
   in one document meaning two copies of the signal polyfill, two disjoint reactive graphs
-  and a **silent** cross-copy freeze — is **dissolved by the pending constraint 10
-  amendment**, since the browser's module map gives one polyfill instance per resolved
-  URL however many Route entry modules are live. If that amendment lapses, this trap comes
-  straight back.
+  and a **silent** cross-copy freeze — is **dissolved**, since the constraint 10 amendment
+  landed and the browser's module map gives one polyfill instance per resolved URL however
+  many client roots are live.
 - **Error boundaries.** The component-level construct: what one is, where it sits in the
   tree, and what it renders. The _response_ half of this — status codes and mid-stream
   throws — graduated to [ticket 26](./issues/26-errors-after-stream-start.md) once
