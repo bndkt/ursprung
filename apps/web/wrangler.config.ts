@@ -14,4 +14,10 @@ export default defineWranglerConfig({
   // but it is free, and it collapses the whitespace esbuild leaves around any
   // JSON it inlines.
   minify: true,
+  // TEMPORARY PROBE — see `.scratch/ursprung-v0/issues/23-does-workers-builds-honour-build-command.md`
+  // and `scripts/workers-builds-probe.sh`. Revert both once the build log and
+  // the branch preview URL have been read.
+  build: {
+    command: "sh ./scripts/workers-builds-probe.sh",
+  },
 });

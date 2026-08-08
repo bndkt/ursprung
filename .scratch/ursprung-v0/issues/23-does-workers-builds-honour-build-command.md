@@ -1,7 +1,7 @@
 # 23 — Does Workers Builds honour `build.command`?
 
 Type: task
-Status: open
+Status: claimed
 Blocked by: —
 Map: [ursprung v0](../map.md)
 Graduated from: [05 — Wrangler's experimental TypeScript config](./05-wrangler-experimental-config-and-build-contract.md)
