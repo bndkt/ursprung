@@ -415,3 +415,8 @@ module**. Three consequences for this ticket's model, none of which contradict i
   speaks of unsuffixed `.ts`/`.tsx` and is silent on `.json`.
 - Interning is unchanged: one node per realpathed path, and a data module reached from both
   sides is one node with both reaches, emitted once per side like any other.
+
+**2026-08-08 — the circular-imports amendment landed.** This ticket's answer raised
+"circular imports become legal" as a *proposed* amendment to constraint 10. The maintainer
+approved it and the sentence is struck from the constraint; read that decision as settled
+rather than pending.
