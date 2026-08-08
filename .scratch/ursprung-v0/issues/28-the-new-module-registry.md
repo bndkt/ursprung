@@ -125,10 +125,21 @@ Three cheap disciplines, two now done:
 emission mode "for later". The whole point of a rule set valid under both is that no second mode
 is needed.
 
-### Left open for the maintainer
+### Nothing left open — one raised question was already answered
 
-**Should a query-bearing specifier written in application code be a build error?** Ticket 12 §3
-makes a dynamic `import("./thing.js?raw")` an ordinary edge whose specifier is rewritten, so the
-query would silently vanish rather than being rejected. That is defensible, but it is currently
-accidental rather than intended — and it is a one-line addition to ticket 13's rules if it should
-be loud instead. Not decided here.
+The research file's §6.2 closes by asking whether a query-bearing specifier written in
+**application code** — `import("./thing.js?raw")` — should be a build error, on the reading that
+ticket 12 §3 would resolve it and rewrite the query silently away.
+
+**It is already a build error, and has been since ticket 13.** §1's specifier-kind table lists
+`Carrying ? or #` → *error*, with `./x.ts?raw` as its own example, and §10 gives it a dedicated
+diagnostic code, **`URS2006` — `?query` or `#fragment` in a specifier**. A dynamic `import()`
+with a literal specifier resolves through the same resolver as a static one, so it is rejected on
+the same rule. The premise that the query "would vanish" is wrong: resolution never gets far
+enough to rewrite anything.
+
+So the no-query-string discipline is enforced at **both** ends independently — the resolver
+refuses to accept one on input (ticket 13), and the emitter has no code path that could produce
+one on output (ADR-0010 hashes into the filename; ticket 14 §6 emits `./<filename>` and nothing
+else). That is the right shape for a rule whose violation is silent on one of the two registries,
+and it needs no addition.

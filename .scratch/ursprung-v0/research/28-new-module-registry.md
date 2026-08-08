@@ -637,6 +637,16 @@ query would vanish. Worth confirming that is intended rather than accidental; if
 specifier should instead be a build error, that is a one-line addition to ticket 13's rules and
 this is the moment to notice it.
 
+> **Correction, 2026-08-08, by the main session: the paragraph above is wrong, and the rule it
+> asks for already exists.** Ticket 13 §1's specifier-kind table lists `Carrying ? or #` →
+> **error**, with `./x.ts?raw` as its own example, and §10 assigns it the diagnostic code
+> **`URS2006` — `?query` or `#fragment` in a specifier**. A dynamic `import()` resolves through
+> the same resolver as a static one, so it is rejected on the same rule; resolution never reaches
+> the point where a specifier could be rewritten, and nothing vanishes silently. The
+> no-query-string discipline is therefore enforced independently at both ends — refused on input
+> by the resolver, unproducible on output by the emitter — which is the right shape given the
+> violation is silent on the new registry. No change is needed.
+
 ### 6.3 ADR-0010's content hashing — untouched
 
 `[INFERENCE]`, argued from §3–§4. The hash is over emitted bytes and real paths and produces a
