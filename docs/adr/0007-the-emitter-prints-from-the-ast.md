@@ -64,6 +64,17 @@ deliberately. Source maps remain out of scope, but the reason recorded for rulin
 tracking through the printer, which is cheap. Minification and identifier renaming still
 need the scope model; source maps never did.
 
+Ruled on 2026-08-08: v0 accepts unmappable production traces, and **the printer records a
+position per printed node regardless**, so maps stay additive rather than a retrofit through
+every print site. No map files are emitted and nothing in the output changes.
+
+**The parser and the AST are not what this decision buys.** Locating type syntax needs a
+full ECMAScript parser before an edit list can blank anything, and the emit hazards above
+are precedence questions that need the structure encoding precedence. The alternative saves
+neither. It also does not avoid an emitter: the JSX call form, the RPC stubs and the
+generated route table have no source span to edit, so blanking means maintaining two
+mechanisms for producing JavaScript where printing has one.
+
 **The parser must be complete, but not faithful beyond purity.** Printing requires knowing
 where every construct starts and ends, which the parser must do regardless to find type
 spans. It does not require modelling the interior of anything pure, which is why the

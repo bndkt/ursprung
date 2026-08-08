@@ -335,3 +335,32 @@ Four design rules follow regardless, and are cheap only if adopted from the star
 - **Whether v0 emits source maps.** Out of scope, but for a reason this ticket voided.
   Raised on the map as a proposal rather than settled here, because scope is the
   maintainer's.
+
+## Comments
+
+**2026-08-08 — the printer decision was re-verified and stands.** Reopened by the maintainer
+while ruling on source maps, since reversing to the whitespace-blanking edit list was one of
+the three readings on the table. It was re-argued from scratch and confirmed, with one
+argument that was not recorded when the decision was first made and materially strengthens
+it:
+
+**The parser and the AST are paid for either way, so the printer's marginal cost is much
+smaller than "printer versus no printer" suggests.** The four ambiguities in decision 1 —
+regex versus division, the arrow-parameter colon, `.tsx`'s bare `<`, and §5.1's speculation
+— are all about *locating* type syntax, not emitting it, so a full ECMAScript parser is
+required before blanking can blank a single character. The AST follows in practice too:
+`ts-blank-space` builds one, and the three §5 emit hazards are precedence questions, which
+cannot be answered without the structure that encodes precedence.
+
+What actually differs is therefore narrow. The printer costs the printing code, and only for
+impure nodes, since anything free of type syntax and JSX is copied byte-for-byte. Against
+that it saves the detection logic for three hazards plus the two ASI and line-break repairs,
+and three entries on the reject list.
+
+And one point absent from the original write-up: **ursprung must generate JavaScript from
+structure regardless.** The JSX call form, ticket 20's RPC stubs and ticket 08's generated
+route table have no source span to edit. An emitter exists in both worlds — blanking does
+not avoid it, it means maintaining *two* mechanisms where the printer has one.
+
+The cost is unchanged and now ruled on: lost output positions, accepted for v0, with ticket
+14 obliged to record a position per printed node so source maps stay additive.

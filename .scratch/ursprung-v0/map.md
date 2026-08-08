@@ -44,9 +44,11 @@ and reopening one is a scope change, not a ticket.
 5. One package, `ursprung`, with subpath exports (`ursprung/jsx-runtime`,
    `ursprung/client`, `ursprung/server`, `ursprung/build`). `apps/web` becomes the
    canonical demo app.
-6. ursprung's own dependencies are exactly three: the TC39 Signals polyfill, capnweb,
-   and Wrangler (dev-only). Real npm dependencies, not vendored. **Every additional
-   dependency needs the maintainer's explicit approval.**
+6. ursprung's **runtime** dependencies are exactly two — the TC39 Signals polyfill and
+   capnweb. Its **dev** dependencies are Wrangler and `typescript`, the latter test-only
+   and never imported from `packages/ursprung/src`, so the published package carries
+   neither. Real npm dependencies, not vendored. **Every additional dependency needs the
+   maintainer's explicit approval.**
 7. Applications **may** depend on npm packages — ESM only (see 14).
 8. The parser builds a real AST for expressions, statements, imports and JSX, and treats
    type syntax as **opaque delete-spans**. No type model, no scope/binding model. Loud
@@ -67,7 +69,7 @@ and reopening one is a scope change, not a ticket.
     loaded from the assets directory. On both sides, a module reachable from more than one
     entrypoint is **emitted once and shared**, not duplicated. Lazy `import()` defers
     **evaluation only**: workerd V8-compiles every uploaded module at startup regardless, so
-    splitting by Route does **not** keep startup flat. Circular imports are an error.
+    splitting by Route does **not** keep startup flat.
 11. No dev server, no HMR, no watch mode. One entry point: `ursprung build`, a pure
     function from a virtual filesystem to output files.
 12. Streaming SSR in v0, **in-order only**. An async component blocks the stream at its
@@ -76,15 +78,22 @@ and reopening one is a scope change, not a ticket.
     never a package manager and never fetches from a registry.
 14. npm dependencies are **ESM only** in v0. A CJS-only package is a hard build error.
 15. **No polyfills, ever, on any target.** On the server the only permitted externals are
-    `cloudflare:*` and those `node:*` specifiers **workerd natively implements**; a
-    `node:*` import workerd does not implement natively is a hard build error, because
-    Wrangler's unenv polyfills are injected by the esbuild pass that disabling bundling
-    switches off. The `node:` prefix is **required** — unprefixed builtins, which
-    `nodejs_compat_v2` legalises, are a build error. On the client every `node:*` import
-    is a hard build error. The permitted native set is a function of the compatibility
-    date and must be pinned alongside it.
+    `cloudflare:*` and those `node:*` specifiers **workerd resolves at the application's
+    compatibility date, non-functional stubs included**; anything outside that set is a
+    hard build error, because Wrangler's unenv polyfills are injected by the esbuild pass
+    that disabling bundling switches off. The `node:` prefix is **required** — unprefixed
+    builtins, which `nodejs_compat_v2` legalises, are a build error. On the client every
+    `node:*` import is a hard build error. The permitted set is a function of the
+    compatibility date and must be pinned alongside it. **`nodejs_compat` itself is a
+    precondition ursprung documents but cannot check**: compatibility flags are not in the
+    Config, so an application that omits the flag gets a Worker that fails at startup
+    rather than a build that fails at build time.
 16. Third-party modules are **uncoloured** — their side is inferred from reachability.
     First-party modules must declare. We control our source; we don't control npm's.
+17. **The Config file is evaluated by the build host before the build begins.** The build
+    function receives `{ vfs, config }`, where `config` is already plain data; it performs
+    no evaluation and touches no Node API. References inside the evaluated config are
+    normalised to virtual-filesystem paths by the host, at that boundary.
 
 ## Pending amendments
 
@@ -126,8 +135,9 @@ and **Emitted module**. There is deliberately no collective noun for one side's 
 was already taken and means a Side, not a position in the graph, so a module emitted once
 for several entrypoints is a **Common module**.
 
-**Proposed 2026-08-08 — constraint 10 loses its last sentence: circular imports are not an
-error.** Raised by ticket 12. Proposed change: strike "Circular imports are an error."
+**Landed 2026-08-08 — constraint 10 lost its last sentence: circular imports are not an
+error.** Raised by ticket 12, approved by the maintainer and struck from the constraint
+above. Kept here only for the reasoning, which the constraint itself does not carry.
 
 The clause could not survive its own justification. Flat concatenation **cannot express a
 cycle** — that is why it was there — and ursprung no longer concatenates. Both hosts own
@@ -150,13 +160,32 @@ needs none because the host owns evaluation order. That removes ticket 14's "top
 order is underspecified" sub-question rather than answering it; emission ordering reduces
 to being deterministic, so sorting by path is the whole rule.
 
-**Proposed 2026-08-07 — a new constraint 17: the build host evaluates the config; the
-build itself evaluates nothing.** Raised by ticket 08. Proposed wording:
+**Landed 2026-08-08 — constraint 15's "natively implements" was too narrow by one word, and
+the rule had an unstated precondition.** Raised by ticket 13, approved by the maintainer and
+folded into the constraint above. Kept here only for the reasoning. Two changes, both small:
 
-> The Config file is evaluated by the **build host** before the build begins. The build
-> function receives `{ vfs, config }`, where `config` is already plain data; it performs
-> no evaluation and touches no Node API. References inside the evaluated config are
-> normalised to virtual-filesystem paths by the host, at that boundary.
+- **The permitted server set includes the non-functional stubs.** Constraint 15 permits the
+  `node:*` specifiers workerd "natively implements". A stub — `node:child_process`,
+  `node:tty`, a dozen others — is shipped by the runtime and resolves, but does nothing.
+  Under the literal wording it is excluded; the ticket includes it, because packages
+  routinely import such modules at module scope for feature detection and never call them,
+  so rejecting one breaks working code to prevent a throw that may never happen.
+- **`nodejs_compat` is a documented precondition ursprung cannot check.** The externals rule
+  is only true if the application enabled the flag, and compatibility _flags_ are not in
+  ticket 08's Config — only the date is. Adding them was considered and rejected as more
+  surface than the check is worth. The accepted cost: an application that omits the flag
+  gets a Worker that fails at **startup**, not a build that fails at build time. Ticket 21
+  is handed the rider that the Wrangler-facing output contract is the one place it could
+  actually be verified.
+
+Worth noting alongside: research §7.5 found `$compatEnableDate("2026-08-04")` on
+`nodeJsCompat` in workerd's `main` — landed, unshipped, and contradicting Cloudflare's own
+docs. If it ships, the precondition becomes true by default for modern dates and the second
+bullet's cost mostly evaporates. Do not build on it.
+
+**Landed 2026-08-08 — a new constraint 17: the build host evaluates the config; the
+build itself evaluates nothing.** Raised by ticket 08, approved by the maintainer and added
+to the constraint list above. Kept here only for the reasoning.
 
 **Why it is an addition and not an amendment to constraint 4.** Constraint 4 binds *build
 modules*, and evaluation sits outside the build entirely — so the build stays pure and
@@ -180,8 +209,10 @@ reused.
 Recorded as [ADR-0005](../../docs/adr/0005-the-host-evaluates-the-config-before-the-build.md),
 which stands whether or not this is folded into the constraint list.
 
-**Proposed 2026-08-07 — constraint 6 gains a fourth dependency, and its opening clause is
-stale.** Raised by ticket 11, and already exercised rather than merely proposed: the
+**Landed 2026-08-08 — constraint 6 gained a fourth dependency, and its opening clause was
+stale.** Raised by ticket 11, approved by the maintainer and folded into the constraint
+above; kept here only for the reasoning. It was already exercised rather than merely
+proposed when it was raised: the
 maintainer approved `typescript` as a **test-only dev dependency** in that session, which is
 constraint 6's own stated mechanism ("every additional dependency needs the maintainer's
 explicit approval") working as designed. It buys the one oracle the other three cover worst —
@@ -189,19 +220,17 @@ a differential against `tsc` on the **erasure decision set**, which byte ranges 
 type syntax, plus corpus cases generated from the `SyntaxKind` table research §3's 19 + 38
 entries were enumerated against.
 
-Nothing about the constraint's intent changes; only its arithmetic. Proposed wording for the
-first sentence:
-
-> ursprung's runtime dependencies are exactly two — the TC39 Signals polyfill and capnweb.
-> Its dev dependencies are Wrangler and `typescript`, the latter test-only and never
-> imported from `packages/ursprung/src`, so the published package carries neither.
-
-The distinction is worth spelling out because it is what keeps the approval cheap: a
+Nothing about the constraint's intent changed; only its arithmetic. The runtime/dev
+distinction is worth spelling out because it is what keeps the approval cheap: a
 test-only dev dependency cannot reach a consumer, so the "three dependencies" promise that
 matters — what someone installing `ursprung` gets — is unchanged.
 
-**Proposed 2026-08-07 — source maps should be reconsidered, because the reason they were
-ruled out was never true.** Raised by ticket 11. Out of scope lists them beside minification
+**Landed 2026-08-08 — source maps stay out of scope, but the reason was wrong and the
+emitter carries an obligation.** Raised by ticket 11 and ruled by the maintainer: v0 accepts
+unmappable production stack traces, and **ticket 14 must record a position per printed node
+anyway**, so maps stay additive later rather than a retrofit through every print site. The
+retrofit is what gets more expensive with delay; the map files do not. Out of scope lists
+them beside minification
 and identifier renaming, all three "needing the scope model constraint 8 rules out".
 Minification and renaming do. **Source maps never did** — they need position tracking
 through the emitter, which is a mapping recorded per printed node.
@@ -216,10 +245,13 @@ Two things changed at once, and the combination is what makes this worth your at
   Build diagnostics are fine and always were — they are computed against the original module
   text. This is purely about runtime errors in deployed code.
 
-Deliberately **not** ruled either way here, because scope is the maintainer's. Three readings
-are all defensible: accept unmappable production traces in v0; emit source maps for the
-server output only, where the trace actually arrives; or reverse ticket 11's printer decision
-in favour of the edit list, which is the option that gets more expensive the longer it waits.
+Two alternatives were weighed and rejected. **Server-output-only maps** — cheapest to build
+while the emitter is being designed, and where the trace actually arrives — buy a demo app
+nothing it needs, and leave client errors in a resumed page unmappable anyway. **Reversing
+the printer decision** in favour of the edit list was taken off the table when that decision
+was re-verified the same day (see ticket 11's comments): it would give back three constructs
+ursprung accepts and both reference implementations do not, adopt a bug those
+implementations still carry, and split code emission into two mechanisms.
 
 Previously: constraints 8 and 15 were both amended on 2026-08-07, from findings in
 [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
@@ -327,6 +359,25 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   **Circular imports become legal** — proposed amendment above. First-party means **no
   `node_modules` in the real path**, so workspace members declare. Recorded as
   [ADR-0008](../../docs/adr/0008-the-module-graph-and-the-side-matrix.md).
+- [Module resolution rules for v0](./issues/13-module-resolution-rules.md) — Node's
+  `ESM_RESOLVE` minus research's skip list, plus three ursprung rules applied at one place.
+  **A first-party specifier carries the source extension** (`"./format.shared.ts"`), so the
+  specifier _is_ a virtual filesystem path and the resolver maps nothing —
+  [ADR-0009](../../docs/adr/0009-first-party-specifiers-carry-the-source-extension.md), and
+  it fixes ticket 24's tsconfig question rather than narrowing it. Extensions classify by
+  suffix and **never by location**, which is forced: the published `ursprung` ships `.ts`.
+  Condition sets adopted verbatim from research and **fixed, not app-configurable**; their
+  order is documentation only. `main` kept, the `module` **field** and the legacy `browser`
+  map refused, Node-exact — `path-to-regexp`-shaped packages are rejected with eyes open.
+  CJS is a **per-module** verdict and an ambiguous `.js` is an error, because syntax
+  detection would need a source read _inside_ the resolve phase and cost ticket 10's batched
+  diagnostics. **JSON imports resolve**, emitted as `export default JSON.parse(<original
+  bytes>)` — not a raw splice (`__proto__`) and not a re-serialisation (integer-key
+  reordering) — which adds a second node kind to ticket 12. The `node:*` set is a
+  **generated date-keyed table** selected by ticket 08's `compatibilityDate`, stubs
+  included; **`nodejs_compat` is assumed and unverifiable from the build**, an accepted cost
+  handed to ticket 21. Two caches with different lifetimes: resolution results are keyed on
+  Side and die between passes, manifest reads do not.
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
@@ -373,8 +424,12 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
 - **Static assets.** The demo app needs _something_ for files that aren't TypeScript,
   even with no stylesheet pipeline. [Ticket 10](./issues/10-build-entry-point-and-vfs.md)
   removed the interface obstacle — reads and outputs are both `Uint8Array`, so a
-  non-TypeScript file is already representable end to end. What remains is which files are
-  collected, how they are named, and who serves them.
+  non-TypeScript file is already representable end to end. Narrowed again by
+  [ticket 13](./issues/13-module-resolution-rules.md): a non-TypeScript file **reached by an
+  import** is now handled for exactly one type, JSON, and handled by turning it into a
+  module rather than by shipping it as an asset. What remains is the other half — files
+  nothing imports, which are collected rather than resolved: which ones, how they are named,
+  and who serves them.
 
 ## Out of scope
 
@@ -389,8 +444,9 @@ Ruled beyond this destination. Never graduates; returns only as a fresh effort.
   out. **Source maps were on this line for the same reason, and that reason was wrong** —
   they need position tracking through the emitter, not a scope model, and
   [ticket 11](./issues/11-parser-subset-ast-and-errors.md) made them the only way to map a
-  production stack trace. Still out of scope; see Pending amendments for the proposal to
-  revisit.
+  production stack trace. **Still out of scope, ruled 2026-08-08** — but with an obligation
+  attached rather than a door closed: the emitter records a position per printed node, so
+  adding maps later is additive. See Pending amendments.
 - **Stylesheets and a general asset pipeline.** Explicitly out per the vision.
 - **The build-in-a-Worker product** — an agent driving a dynamic Worker, writing to R2,
   serving from a dispatch namespace. The constraint is in scope; the product is not.
