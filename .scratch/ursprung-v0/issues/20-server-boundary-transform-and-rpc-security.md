@@ -93,3 +93,23 @@ Also settled, and constraining:
 - **HTTP batch is one-shot and one-directional**; bidirectional needs WebSocket.
 - Pin capnweb to an **exact version** — 0.x, wire format already broken once in 0.9.0,
   undocumented outside its README, Cloudflare's own word is "highly experimental".
+
+## Input from ticket 12 — decided, not open
+
+- **The boundary edges arrive materialised.** The graph carries a boundary-edge list and
+  per-node export records; this ticket reads them rather than re-walking. That is
+  deliberate — the RPC surface should not be derived by a second walker that can disagree
+  with the first.
+- **The client traversal cuts at a boundary edge**, so the stub is the only thing standing
+  where the import was. The server traversal walks straight through, which is why a
+  `.server.ts` reached *only* through a boundary still lands in the server output.
+- **`.shared.` can never be an importer here.** `shared → server` is a hard error, so the
+  boundary is exactly `client → server` and nothing else.
+- **Zero-binding boundaries do not exist.** An all-`type` import clause is elided before
+  colouring, so this ticket never sees an edge with no callable names — the case that would
+  otherwise have arrived from `import { type BuildRow } from "./api.server.ts"`.
+- **The allowlist gap ticket 12 could not close**, restated because it is this ticket's:
+  the Route file names every callable export for API routes, but a `.server.ts` reached
+  from a `.client.tsx` appears nowhere in it.
+
+See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 2, 3, 4 and 9.

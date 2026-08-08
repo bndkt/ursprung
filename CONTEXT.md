@@ -39,6 +39,16 @@ The point where a client module imports from a server module. The bundler replac
 import with an RPC stub rather than including the code.
 _Avoid_: the network boundary, the RPC boundary
 
+**First-party module**:
+A module whose real path carries no `node_modules` segment — the application's own source,
+including a workspace member. It declares its Side.
+_Avoid_: local module, app code
+
+**Third-party module**:
+A module reached from inside `node_modules`. It declares nothing and has no Side; a side
+suffix in its filename means nothing.
+_Avoid_: vendor module, external
+
 ### Building
 
 **The graph**:
@@ -47,17 +57,29 @@ every output is derived.
 _Avoid_: dependency tree, module map, bundle graph
 
 **Colouring**:
-Assigning a side to each node in the graph and propagating it along edges.
+Deriving each node's Reach by traversing the graph from its entrypoints. A node's Side is
+declared or inferred and is an input to colouring, not its output.
 _Avoid_: tainting, marking
+
+**Reach**:
+Which outputs a module ended up in — a set drawn from server and client, derived by
+colouring. Distinct from Side, which says where a module is _allowed_ to run.
+_Avoid_: colour, target, placement
+
+**Client root**:
+A client module reached directly from a server or shared module. Every one is an
+independent root of the client output; there is no single client entry per Route.
+_Avoid_: client entrypoint
 
 **Root entrypoint**:
 The module Wrangler is configured with, carrying the router. There is exactly one, and it
 is the only server output not reached by an import.
 
 **Route entrypoint**:
-The emitted module for one Route on one side — imported lazily by the router once it has
-matched on the server, loaded from the assets directory by the browser on the client.
-There is one per Route per side.
+The emitted module for one Route on the server, imported lazily by the router once it has
+matched. It carries the Route's own modules and its full ancestor Layout chain, so one
+import satisfies a matched request. There is one per Route, and **no client counterpart**
+— the client output is rooted at Client roots instead.
 _Avoid_: route bundle, chunk
 
 **Common module**:

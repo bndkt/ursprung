@@ -134,3 +134,19 @@ Also relevant to the request-waterfall mitigation this ticket owns: ticket 27 co
 server side is genuinely lazy in *evaluation*, but **every uploaded module is V8-compiled
 at startup regardless**. Splitting by Route does not keep startup flat as routes are added,
 so no part of this contract should be justified on that basis.
+
+## Input from ticket 12 — decided, not open
+
+- **The server output's shape is fixed.** One generated **Root entrypoint** carrying the
+  router and the generated route table, lazily importing N generated **Route entrypoints**,
+  each self-sufficient — its own `layout`/`component`/`api` modules plus its full ancestor
+  Layout chain, so one import satisfies a matched request. Ancestor layouts fall out as
+  Common modules with no extraction rule.
+- **There is no per-Route client entrypoint.** Client roots are the modules at a
+  `→ client` crossing, each an independent root, because a generated per-Route entry would
+  evaluate every Client component eagerly and undo Resumption.
+- **The preload input this ticket was promised exists.** The graph records, per Route,
+  which client roots that Route reaches — that set is what the `<link rel="modulepreload">`
+  mitigation is computed from.
+
+See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 5 and 9.

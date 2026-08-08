@@ -92,3 +92,24 @@ emitter can reintroduce it on both sides.
 Emitted modules must also carry I/O-free and top-level-await-free top levels; the legacy
 registry hard-fails unsettled top-level await at first import, which is
 first-request-to-that-Route rather than deploy time.
+
+## Input from ticket 12 — decided, not open
+
+Two of this ticket's remaining sub-questions are **dissolved rather than answered**, and
+one input is fixed.
+
+- **Topological order is gone.** Ticket 12 dropped constraint 10's cycle ban (a proposed
+  amendment on the map), so there is no topological order to underspecify — and real ESM
+  needs none, because the host owns evaluation order. Emission ordering now only has to be
+  **deterministic**: sort by path, per ticket 10's determinism guarantee.
+- **The extraction rule is gone too.** Emitting real ESM means a module reached by several
+  entrypoints is emitted once and imported by all of them *by construction*. Being a Common
+  module is a position in the graph, not a decision this ticket makes.
+- **The emission unit is a `(node, side)` pair, not a node.** A module reached by both
+  sides is emitted twice — the outputs go to different places — and a `.client.tsx`
+  importing a `.server.ts` prints differently per side.
+- **This ticket owns half of the enforcement.** Ticket 12's post-emission audit reads
+  **emission records**, so emission must record, per emitted client module, its provenance
+  node and the resolved target of every import specifier it writes.
+
+See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 1, 6, 7 and 9.
