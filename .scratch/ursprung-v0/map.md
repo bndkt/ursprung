@@ -45,10 +45,11 @@ and reopening one is a scope change, not a ticket.
    `ursprung/client`, `ursprung/server`, `ursprung/build`). `apps/web` becomes the
    canonical demo app.
 6. ursprung's **runtime** dependencies are exactly two — the TC39 Signals polyfill and
-   capnweb. Its **dev** dependencies are Wrangler and `typescript`, the latter test-only
-   and never imported from `packages/ursprung/src`, so the published package carries
-   neither. Real npm dependencies, not vendored. **Every additional dependency needs the
-   maintainer's explicit approval.**
+   capnweb. Its **dev** dependencies are Wrangler, `typescript`, happy-dom and
+   `playwright-core`; the last three are test-only and never imported from
+   `packages/ursprung/src`, so the published package carries none of them. Real npm
+   dependencies, not vendored. **Every additional dependency needs the maintainer's explicit
+   approval.**
 7. Applications **may** depend on npm packages — ESM only (see 14).
 8. The parser builds a real AST for expressions, statements, imports and JSX, and treats
    type syntax as **opaque delete-spans**. No type model, no scope/binding model. Loud
@@ -224,6 +225,24 @@ Nothing about the constraint's intent changed; only its arithmetic. The runtime/
 distinction is worth spelling out because it is what keeps the approval cheap: a
 test-only dev dependency cannot reach a consumer, so the "three dependencies" promise that
 matters — what someone installing `ursprung` gets — is unchanged.
+
+**Landed 2026-08-08 — constraint 6 gained two more test-only dev dependencies.** Raised by
+ticket 22, approved by the maintainer in that session and folded into the constraint above;
+kept here only for the reasoning. Same shape as ticket 11's `typescript` approval, and again
+only the arithmetic changes: **happy-dom** and **`playwright-core`** are what let the client
+runtime be executed rather than merely inspected, which is the whole basis of ADR-0011.
+
+The runtime/dev distinction is what keeps both approvals cheap, and it is worth restating
+because the list is now twice as long as when the constraint was written: a test-only dev
+dependency cannot reach a consumer, so the promise that actually matters — what someone
+installing `ursprung` gets — is still exactly two packages.
+
+Worth noting what was **not** needed. Running the server output in real workerd costs nothing:
+`wrangler` is already a dev dependency and exports `unstable_startWorker` and a purpose-built
+`createTestHarness`, and the `workerd` binary is already on disk via miniflare. And
+`playwright-core` was taken over `@playwright/test` because its runner's one indispensable
+feature, traces on failure, turns out to be **library** API — so a second test runner buys only
+retries and parallelism.
 
 **Landed 2026-08-08 — source maps stay out of scope, but the reason was wrong and the
 emitter carries an obligation.** Raised by ticket 11 and ruled by the maintainer: v0 accepts
@@ -410,6 +429,29 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   the client-side emission of the server node — a module, not a splice — which refines ticket
   12's audit. Recorded as
   [ADR-0010](../../docs/adr/0010-emitted-filenames-are-content-hashed-over-the-condensation-graph.md).
+- [Testing strategy for a from-scratch bundler and renderer](./issues/22-testing-strategy.md)
+  — **executed output is the assertion of record**: build a fixture application, run it, assert
+  behaviour, because with nothing inherited from upstream a structural assertion only restates
+  the implementation's own belief. Emission-record assertions localise failures beneath it, and
+  per-phase units are thin **by construction** — ticket 12's annotated-in-place graph leaves no
+  value to hold. Real workerd is free (`wrangler` already exports `createTestHarness`); the
+  client gets three executors — a **Recording Host**, the DOM Host on happy-dom, and Chromium
+  via `playwright-core`'s **library** API from `bun test`, driving a **locally served** demo app
+  as a gate, because Actions and Workers Builds have no handshake and fork PRs would fail open.
+  Two dev dependencies approved — constraint 6 amended above. Fixtures split on the valid/invalid
+  line: valid ones are directories, **diagnostic ones are inline**, since a deliberately broken
+  directory breaks the repo's own typecheck and lint. Snapshots are **inline and structural
+  only** — a code-text snapshot asserts _unchanged_ where ticket 11's oracle already asserts
+  _valid_. The leak invariant gets a **smuggling corpus with a vacuity guard** on every case
+  (a fixture that stops resolving would otherwise turn all of them green at once) plus **the
+  byte-level re-parse ticket 12 declined** — its cost was a per-build cost, and in tests it
+  rides a parse that already happens. Determinism is three fixed enumeration orders plus a lint
+  ban on `Math.random`/`Date.now`. Resumption reads as **zero Host node-creation calls**, sound
+  only because there is no VDOM, corroborated by fixture counters rather than a runtime hook.
+  And the ordering consequence nobody asked for: the **walking skeleton is the first
+  implementation ticket**, because the assertion of record does not exist until the whole
+  pipeline does. Recorded as
+  [ADR-0011](../../docs/adr/0011-executed-output-is-the-assertion-of-record.md).
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
