@@ -22,15 +22,17 @@ declares its side in its filename; third-party modules have theirs inferred.
 _Avoid_: environment, target, colour, platform
 
 **Server module**:
-A module whose filename carries `.server.` and which may only ever be emitted into the
-server bundle.
+A module whose filename carries `.server.` and which may only ever reach the server
+output.
 
 **Client module**:
-A module whose filename carries `.client.`. It is emitted into client bundles and may
-also appear in the server bundle, because client modules render during server rendering.
+A module whose filename carries `.client.`. It reaches the client output and may also
+reach the server output, because client modules render during server rendering.
 
 **Shared module**:
-A module whose filename carries `.shared.`, emitted into whichever bundles reach it.
+A module whose filename carries `.shared.`, reaching whichever output reaches it. This is
+a statement about its Side, not about being emitted once for several entrypoints — that
+is a Common module, and the two are independent.
 
 **Server boundary**:
 The point where a client module imports from a server module. The bundler replaces the
@@ -48,19 +50,31 @@ _Avoid_: dependency tree, module map, bundle graph
 Assigning a side to each node in the graph and propagating it along edges.
 _Avoid_: tainting, marking
 
-**Server bundle**:
-The single output containing all code that runs on the server, including client modules
-that participate in server rendering.
-_Pending change_: an amendment proposed on 2026-08-07 replaces this with a root
-entrypoint plus one module per route. See `.scratch/ursprung-v0/map.md`, Pending
-amendments. Do not rename anything until that lands.
+**Root entrypoint**:
+The module Wrangler is configured with, carrying the router. There is exactly one, and it
+is the only server output not reached by an import.
 
-**Route bundle**:
-The output for one route, loaded by the browser. There is one per route.
-_Avoid_: client bundle (ambiguous — prefer this term when a specific route's output is
-meant), chunk
-_Pending change_: the same amendment makes this an entry module plus shared modules
-rather than one file, and leaves no term for a shared emitted module.
+**Route entrypoint**:
+The emitted module for one Route on one side — imported lazily by the router once it has
+matched on the server, loaded from the assets directory by the browser on the client.
+There is one per Route per side.
+_Avoid_: route bundle, chunk
+
+**Common module**:
+An emitted module that more than one entrypoint reaches, so the build emits it once and
+they share it rather than each carrying a copy.
+_Avoid_: shared module — that word is taken, and means something unrelated (a Side, not a
+position in the graph); vendor chunk
+
+**Emitted module**:
+Any module the build writes out, whatever its role. Filenames are content-hashed; a query
+string is never used to distinguish two of them, because the host's module registry keys
+on the resolved specifier and would treat `x.js?v=2` as a second instance.
+
+There is deliberately **no collective noun** for everything the build emits for one side.
+Say "the server output" or "the client output" in prose. The words _server bundle_ and
+_route bundle_ were retired on 2026-08-07: each named a single file, and after the
+constraint 10 amendment neither is one.
 
 **Type stripping**:
 Removing erasable TypeScript syntax from a module while otherwise preserving its

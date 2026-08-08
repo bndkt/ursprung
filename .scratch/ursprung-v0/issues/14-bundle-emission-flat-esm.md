@@ -7,24 +7,30 @@ Map: [ursprung v0](../map.md)
 
 ## Question
 
-> **Premise changed 2026-08-07 — read the map's Pending amendments first, and treat
-> everything below as historical.** This ticket was written to resolve a contradiction
-> between constraint 8 (no scope model) and constraint 10 (flat self-contained bundles).
-> The maintainer has since proposed emitting **real ESM modules on both sides**, linked by
-> workerd's registry on the server and the browser's module map on the client. Both
-> guarantee one instance per resolved specifier, and neither needs a loader from us.
+> **Premise changed 2026-08-07, and the change has now landed. Treat everything below as
+> historical and rewrite this ticket before working it.** It was written to resolve a
+> contradiction between constraint 8 (no scope model) and constraint 10 (flat
+> self-contained bundles). Constraint 10 has since been replaced and approved: ursprung
+> emits **real ESM modules on both sides**, linked by workerd's registry on the server and
+> the browser's module map on the client. Both guarantee one instance per resolved
+> specifier, and neither needs a loader from us.
 >
 > **That dissolves this ticket's central problem rather than answering it.** Real modules
 > get module scope for free, so there is no renaming, no identifier collision, and no
 > scope model needed anywhere. The three options below — IIFE wrappers, prefix renaming,
-> a minimal scope model — all become moot, and constraint 8 stops being in tension with
+> a minimal scope model — are all moot, and constraint 8 is no longer in tension with
 > constraint 10 at all.
 >
-> What this ticket becomes: module naming and content hashing, the extraction rule (which
-> modules are reachable from more than one entrypoint), emission ordering and determinism,
-> and how RPC stubs are woven in. Rewrite it once ticket 27 reports; do not work it as
-> written. If 27 comes back negative on workerd dynamic import, only the **server** half
-> reverts and the original framing below applies to the server alone.
+> What this ticket becomes: module naming and **content hashing of filenames** — never a
+> query string, since the registry keys on the resolved specifier and `?v=2` mints a
+> second instance — the extraction rule (which modules are reachable from more than one
+> entrypoint), emission ordering and determinism, and how RPC stubs are woven in.
+>
+> Two further inputs from ticket 11, now that emission is printed rather than patched:
+> output is **printed from the AST with verbatim spans for pure-JavaScript subtrees**, so
+> a third-party module is close to a byte copy and only its import and export statements
+> print; and **output positions bear no relation to source positions**, which is what puts
+> source maps back on the table as an open scope question.
 
 Two locked constraints are in tension and this ticket resolves it. Constraint 10: one
 self-contained flat ESM file per bundle, modules concatenated in topological order with

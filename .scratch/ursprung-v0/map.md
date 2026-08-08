@@ -56,11 +56,18 @@ and reopening one is a scope change, not a ticket.
    "whatever TypeScript accepts" is not a safe rule.
 9. Every first-party module declares its side: `.server.`, `.client.` or `.shared.`.
    An unsuffixed `.ts`/`.tsx` reached by the graph is a build error.
-10. ⚠️ **Amendment pending — do not design against this without reading Pending
-    amendments below.** As written: one self-contained ESM file per bundle. No chunks, no
-    shared extraction, no runtime loader. Duplication across route bundles is accepted.
-    Circular imports are an error. The maintainer has proposed replacing all of it except
-    the no-loader rule; tickets 12, 14 and 21 are affected and carry their own banners.
+10. ursprung emits **real ESM modules and lets the host's own module system link them**. It
+    ships **no loader** on either side: workerd's module registry links the server, the
+    browser's module map links the client, and both guarantee **one instance per resolved
+    specifier**. The key is the *specifier*, not the file — `./signals.js?v=2` is a second
+    instance of the same module — so the emitter content-hashes **filenames** and never uses
+    a query string. The server output is a **root entrypoint** (the Worker entrypoint
+    Wrangler is configured with, carrying the router) plus **one module per Route**, imported
+    lazily once the router has matched. The client output is **one entry module per Route**,
+    loaded from the assets directory. On both sides, a module reachable from more than one
+    entrypoint is **emitted once and shared**, not duplicated. Lazy `import()` defers
+    **evaluation only**: workerd V8-compiles every uploaded module at startup regardless, so
+    splitting by Route does **not** keep startup flat. Circular imports are an error.
 11. No dev server, no HMR, no watch mode. One entry point: `ursprung build`, a pure
     function from a virtual filesystem to output files.
 12. Streaming SSR in v0, **in-order only**. An async component blocks the stream at its
@@ -85,80 +92,39 @@ Where a resolved ticket shows a locked constraint to be wrong, it is proposed he
 than edited in — the constraints are the maintainer's. Approved amendments are folded
 into the list above and struck from this section.
 
-**Proposed 2026-08-07 — ursprung emits a module graph, not bundles.** Raised by the
-maintainer after ticket 07, in three steps that are clearer as one. Proposed replacement
-for constraint 10:
+**Landed 2026-08-07 — constraint 10 replaced: ursprung emits a module graph, not bundles.**
+Approved by the maintainer and folded in above, with ticket 27's two corrections written
+into the constraint rather than left as riders. Kept here only for the reasoning, which the
+constraint itself does not carry.
 
-> ursprung emits **real ESM modules and lets the host's own module system link them**. It
-> ships no loader on either side: workerd's module registry links the server, the
-> browser's module map links the client, and both guarantee **one instance per resolved
-> specifier**.
->
-> The server output is a **root entrypoint** — the Worker entrypoint Wrangler is
-> configured with, carrying the router — plus **one module per Route**, imported lazily
-> once the router has matched. The client output is **one entry module per Route**, loaded
-> from the assets directory. On both sides, a module reachable from more than one
-> entrypoint is **emitted once and shared**, not duplicated.
->
-> Circular imports are an error.
+**Why, and the obvious reasons are not the load-bearing ones.** Ticket 02's silent
+two-copies-of-the-polyfill failure did **not** force this — the bundler could have inlined
+each Route's ancestor chain and kept one copy live per request. It is dissolved as a side
+effect. On the server, **upload size** forces it: N Route entrypoints each carrying a full
+copy of renderer, signals and capnweb, against a total script-size limit. On the client,
+**cross-route caching** forces it: with self-contained bundles a second Route re-downloads
+the whole runtime. But the largest consequence is neither — **it dissolves the tension
+ticket 14 existed to resolve.** Flat concatenation needs every import rewritten to a local
+binding, with no binding model to dodge identifier collisions with: constraint 8 against
+constraint 10. Real ESM modules get module scope for free, so ticket 14 shrinks from
+"resolve a two-constraint contradiction" to module naming, content hashing, ordering and
+asset layout.
 
-This drops "one self-contained ESM file per bundle", "no chunks", "no shared extraction"
-and "duplication across route bundles is accepted" — most of the old constraint 10. It
-keeps the part that was always the real invariant: **ursprung ships no loader.**
+**The cost.** A self-contained bundle is one request; a module graph is a request waterfall
+— fetch the Route entry, parse it, discover its imports, fetch those. ursprung controls the
+HTML because it does Server rendering, so it can emit `<link rel="modulepreload">` for
+exactly the modules a Route needs. **Ticket 21 must design that mitigation, not assume it.**
 
-**Why, recorded carefully, because the obvious reasons are not the load-bearing ones.**
-
-- Ticket 02's silent two-copies-of-the-polyfill failure does **not** force this. The
-  bundler could inline each Route's ancestor chain into its own entrypoint and keep one
-  copy live per request. It is dissolved as a side effect, not a cause — see the fog note
-  on client-side navigation, whose central trap this removes outright.
-- On the server, **upload size** forces it: N Route entrypoints each carrying a full copy
-  of renderer, signals and capnweb, against a total script-size limit.
-- On the client, **cross-route caching** forces it: with self-contained bundles, a second
-  Route re-downloads the whole runtime.
-- The largest consequence is neither. **It dissolves the tension ticket 14 exists to
-  resolve.** Flat concatenation needs every import rewritten to a local binding, with no
-  binding model to dodge identifier collisions with — constraint 8 against constraint 10.
-  Real ESM modules get module scope for free, so no renaming and no scope model are
-  needed anywhere. Ticket 14 shrinks from "resolve a two-constraint contradiction" to
-  module naming, content hashing, ordering and asset layout.
-
-**The cost, stated honestly.** A self-contained bundle is one request; a module graph is a
-request waterfall — fetch the Route entry, parse it, discover its imports, fetch those.
-ursprung controls the HTML because it does Server rendering, so it can emit
-`<link rel="modulepreload">` for exactly the modules a Route needs and start those fetches
-in parallel with the document. That mitigation should be designed in ticket 21, not
-assumed. Also new: content-hashed filenames, so shared modules cache immutably.
-
-**This un-scopes something.** "Chunk splitting and shared-chunk extraction" was in Out of
-scope purely as a consequence of constraint 10, and has been removed from that list. Net
-work is lower, not higher — deciding what to extract is a graph analysis over the module
-graph, which is far cheaper than the scope model this avoids.
-
-**Vocabulary changes if this lands.** `CONTEXT.md` defines **Server bundle** as "the
-single output containing all code that runs on the server" and **Route bundle** as "the
-output for one route" — both become wrong, and there is no term yet for a shared emitted
-module. That is a `/domain-modeling` pass once ticket 27 reports.
-
-**Unblocked 2026-08-07 — [ticket 27](./issues/27-workerd-dynamic-import-at-request-time.md)
-came back yes, and awaits your approval to fold in.** `import()` inside a `fetch` handler
-is the designed-for path on workerd, with no compatibility flag, and the legacy registry
-gives **one instance per resolved specifier**, so shared-module extraction on the server is
-safe. No fallback is needed; the original constraint 10 does not stand for the server.
-
-Two findings change what the amendment should say, so read them before approving:
-
-- **Lazy `import()` defers evaluation, not compilation.** On the legacy registry workerd
-  V8-compiles *every* uploaded module at startup, imported or not. The amendment's stated
-  server-side rationale — **upload size** — is untouched and still correct. But the
-  adjacent, unstated hope that splitting into N Route modules keeps startup flat as routes
-  are added is **false**, and must not reach the spec.
-- **The key is the resolved specifier, not the file.** `./signals.js?v=2` is a second
-  instance of the same module — ticket 02's silent two-graphs failure, reachable through
-  the emitter. Content-hash the **filename**, never a query string.
-
-The client half never needed research: the HTML module map has guaranteed both properties
-for years.
+**Two things this leaves open.** "Chunk splitting and shared-chunk extraction" was in Out of
+scope purely as a consequence of the old constraint 10, and is removed from that list — net
+work is lower, because deciding what to extract is a graph analysis, far cheaper than the
+scope model this avoids. And the **ubiquitous language was repaired the same day**:
+`CONTEXT.md` retires **Server bundle** and **Route bundle** — each named a single file, and
+neither is one — in favour of **Root entrypoint**, **Route entrypoint**, **Common module**
+and **Emitted module**. There is deliberately no collective noun for one side's output; say
+"the server output" in prose. Note the collision the naming had to dodge: **Shared module**
+was already taken and means a Side, not a position in the graph, so a module emitted once
+for several entrypoints is a **Common module**.
 
 **Proposed 2026-08-07 — a new constraint 17: the build host evaluates the config; the
 build itself evaluates nothing.** Raised by ticket 08. Proposed wording:

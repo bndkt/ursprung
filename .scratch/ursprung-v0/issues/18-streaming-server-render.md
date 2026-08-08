@@ -26,7 +26,7 @@ Decide:
   a performance problem or a correctness one, and it directly bounds how early the
   browser can start work.
 - **The document shell.** `<head>`, the opening tags, and the script/asset references for
-  the route's client bundle — these must be emitted before the body, but what goes in
+  the Route's client output — these must be emitted before the body, but what goes in
   them may not be known until components have run. Say how that is resolved without
   buffering the whole document. (Related fog on the map: head and metadata management.)
 - **Escaping.** Text content, attribute values, and anything interpolated. Where does it
