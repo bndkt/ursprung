@@ -378,6 +378,23 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   included; **`nodejs_compat` is assumed and unverifiable from the build**, an accepted cost
   handed to ticket 21. Two caches with different lifetimes: resolution results are keyed on
   Side and die between passes, manifest reads do not.
+- [Emission: module naming, specifier rewriting, and what the printer writes](./issues/14-emission-naming-and-specifier-rewriting.md)
+  — one **flat directory per side**, `<basename>-<hash>.js`, specifiers always relative and
+  never a query string. The hash is **transitive over the condensation graph**, because legal
+  cycles leave a hash-over-emitted-bytes with **no fixed point**; own-content-only hashing is
+  rejected as a silent immutable-cache 404 two deployments later. Two answers were **forced,
+  not chosen**: the printer cannot append to a string — it emits a **segment list**, since the
+  hash must be computed before final specifiers are known and substituting them afterwards
+  would silently shift every recorded output position — and the **Root entrypoint cannot be
+  hashed**, because Wrangler is configured with it by name. ursprung **writes its own hash
+  function**, forced by a synchronous build against an async-only web digest. Top-level await
+  is a build error **on the server traversal only**; targeting `new_module_registry` instead
+  was proposed and rejected — it is `$experimental` with no enable date, it charges Route
+  evaluation to **request CPU**, and it makes a query-string bug **silent** rather than fatal,
+  so the legacy-safe rules are kept as **the set valid under both registries**. An RPC stub is
+  the client-side emission of the server node — a module, not a splice — which refines ticket
+  12's audit. Recorded as
+  [ADR-0010](../../docs/adr/0010-emitted-filenames-are-content-hashed-over-the-condensation-graph.md).
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
@@ -429,7 +446,11 @@ In scope, too fuzzy to ticket. Graduates as the frontier advances.
   import** is now handled for exactly one type, JSON, and handled by turning it into a
   module rather than by shipping it as an asset. What remains is the other half — files
   nothing imports, which are collected rather than resolved: which ones, how they are named,
-  and who serves them.
+  and who serves them. [Ticket 14](./issues/14-emission-naming-and-specifier-rewriting.md)
+  added a second question from a direction nobody was watching: **`new URL(spec,
+  import.meta.url)`**, the idiomatic way to name a sibling asset, resolves against the flat
+  emitted directory where no such file exists. `import.meta` is emitted verbatim and the
+  pattern is deliberately not analysed, so today it silently yields a URL to nothing.
 
 ## Out of scope
 
