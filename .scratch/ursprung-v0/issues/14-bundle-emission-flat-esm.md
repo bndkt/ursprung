@@ -113,3 +113,16 @@ one input is fixed.
   node and the resolved target of every import specifier it writes.
 
 See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 1, 6, 7 and 9.
+
+## Input from ticket 13 — two emission facts
+
+[Ticket 13](./13-module-resolution-rules.md) fixes two things this ticket emits:
+
+1. **Data modules.** A JSON import is emitted as
+   `export default JSON.parse(<the original bytes as a JS string literal>)` — deliberately
+   not a raw splice of the JSON text, where `{"__proto__": …}` would set a prototype, and
+   deliberately not `JSON.stringify(JSON.parse(…))`, which reorders integer-like keys. The
+   importing module's `with { type: "json" }` attribute is **stripped on emit**: the target
+   is now a `.js` file, and asserting `json` on one is a hard error in both hosts.
+2. **External specifiers survive rewriting verbatim.** `node:*` and `cloudflare:*` are the
+   only specifiers the emitter must not rewrite or content-hash.

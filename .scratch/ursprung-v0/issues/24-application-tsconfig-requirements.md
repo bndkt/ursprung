@@ -62,3 +62,21 @@ as well as Ursprung's:
 
 Worth deciding here whether that difference is stated to application authors or quietly
 absorbed.
+
+## Input from ticket 13 — the extension question is decided, not narrowed
+
+[Ticket 13](./13-module-resolution-rules.md) fixed the authoring surface: a first-party
+relative specifier carries the **source** extension (`import … from "./format.shared.ts"`),
+the resolver maps nothing, and there is no probing. Recorded as
+[ADR-0009](../../../docs/adr/0009-first-party-specifiers-carry-the-source-extension.md).
+
+So an application's tsconfig **must** set `allowImportingTsExtensions`, with a
+`moduleResolution` that permits it. That is not a recommendation this ticket may revisit —
+it falls out of resolution, and this repo's own root `tsconfig.base.json` already sits
+there. What is left here is the rest of the surface: `verbatimModuleSyntax` (note ticket 12
+elides all-`type` import clauses, so side-effect parity with that flag is already a stated
+cost), `jsx`/`jsxImportSource` once ticket 15 fixes the runtime contract, `types` and lib
+selection per Side, `noUncheckedIndexedAccess` and friends as house style versus
+requirement, and — the sharpest remaining question — whether ursprung *ships* a base config
+applications extend, or merely documents the required options and errors when they are
+missing.

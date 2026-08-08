@@ -397,3 +397,21 @@ structure:
   inherits the Root/Route entrypoint shape from decision 5.
 - **Ticket 09** — a Route entrypoint carrying its ancestor layout chain is a build-side
   fact; how the chain composes at render time is still open there.
+
+## Comments
+
+**2026-08-08, from [ticket 13](./13-module-resolution-rules.md) — the graph gains a second
+node kind.** v0 resolves JSON imports and emits them as JavaScript
+(`export default JSON.parse(…)`), so a node is now either a **source module** or a **data
+module**. Three consequences for this ticket's model, none of which contradict it:
+
+- A data module is a **leaf**: it has no specifiers, so it contributes no edges and cannot
+  participate in a cycle.
+- A data module is **uncoloured** — its Side is inferred from reachability, exactly as a
+  third-party module's is, and it is subject to the Reach invariant but not to the 3×3
+  matrix. This holds even when it is first-party, which is forced rather than chosen: the
+  motivating file is `package.json`, whose name is not ours to pick, so a `.server.` /
+  `.client.` / `.shared.` suffix cannot be required of it. Constraint 9 is untouched — it
+  speaks of unsuffixed `.ts`/`.tsx` and is silent on `.json`.
+- Interning is unchanged: one node per realpathed path, and a data module reached from both
+  sides is one node with both reaches, emitted once per side like any other.

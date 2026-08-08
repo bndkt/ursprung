@@ -150,3 +150,18 @@ so no part of this contract should be justified on that basis.
   mitigation is computed from.
 
 See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 5 and 9.
+
+## Input from ticket 13 — two obligations
+
+[Ticket 13](./13-module-resolution-rules.md) hands this ticket:
+
+1. **`nodejs_compat` is assumed by the build and cannot be verified there.** The permitted
+   `node:*` set is computed from ticket 08's `compatibilityDate`, but compatibility *flags*
+   are not in the Config, so an application that never enabled the flag gets a Worker that
+   fails at **startup** rather than a build that fails at build time. The Wrangler-facing
+   output contract is the one place this could actually be checked — whether it should be,
+   and what ursprung is willing to know about Wrangler in order to do it, is this ticket's
+   call. Ticket 08 deliberately kept ursprung ignorant that Wrangler exists.
+2. **External specifiers pass through untouched.** `node:*` and `cloudflare:*` are the only
+   strings in the output that must survive specifier rewriting and content-hashing verbatim,
+   and they are what the deployed Worker asks its host to resolve.

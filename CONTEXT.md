@@ -13,8 +13,24 @@ no decisions. Decisions live in `docs/adr/`.
 ### Modules and boundaries
 
 **Module**:
-One TypeScript source file in the application or in a package it depends on.
+One file the graph can reach — in the application or in a package it depends on. Almost
+always a TypeScript source file; a Data module is the exception.
 _Avoid_: file, unit
+
+**Data module**:
+A JSON file reached by an import. It is a leaf — it has no specifiers of its own — and it
+carries no Side, whoever owns it.
+
+**Specifier**:
+The string a module writes to name another one. It is what an edge in the graph carries,
+because the two Sides resolve it under different Condition sets and one specifier can
+legitimately name two files.
+_Avoid_: import path, module id
+
+**External specifier**:
+A specifier the build deliberately leaves in its output for the host's own module system to
+resolve, rather than following it into the graph.
+_Avoid_: external, builtin
 
 **Side**:
 Where a module is allowed to run — server, client, or shared. Every first-party module
@@ -97,6 +113,11 @@ There is deliberately **no collective noun** for everything the build emits for 
 Say "the server output" or "the client output" in prose. The words _server bundle_ and
 _route bundle_ were retired on 2026-08-07: each named a single file, and after the
 constraint 10 amendment neither is one.
+
+**Condition set**:
+The export conditions a build claims when resolving, one per Side. It is a **set**: which
+condition wins is decided by the order the package author wrote their keys, never by ours.
+_Avoid_: condition list, condition order, target
 
 **Type stripping**:
 Removing erasable TypeScript syntax from a module while otherwise preserving its
