@@ -1,7 +1,7 @@
 # 24 — What ursprung requires of an application's tsconfig
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: —
 Map: [ursprung v0](../map.md)
 Graduated from: [06 — The erasable TypeScript subset](./06-erasable-typescript-subset.md)
