@@ -9,4 +9,9 @@ export default defineWranglerConfig({
   // runtime asset fields — `htmlHandling`, `notFoundHandling`, `runWorkerFirst`
   // — are in `cloudflare.config.ts` under `assets`.
   assetsDirectory: "./public",
+  // Wrangler does not minify by default. The win here is small in bytes — the
+  // upload is mostly one HTML template literal, which esbuild will not touch —
+  // but it is free, and it collapses the whitespace esbuild leaves around any
+  // JSON it inlines.
+  minify: true,
 });

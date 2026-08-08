@@ -147,10 +147,26 @@ will not touch. Still free, and it also cleans up item 6.
 import down to the two properties actually read.
 
 `CLAUDE.md` is right that the manifest should stay the single source of truth, so
-the fix is not to hardcode. Options: `minify: true` (item 5) collapses most of
-it; or import the named exports (`import { name, version } from
-"../package.json" with { type: "json" }`), which lets esbuild drop the rest; or
-inject them at build time via `define`.
+the fix is not to hardcode.
+
+**Resolved: `minify: true` only, the default import stays.** Named imports do let
+esbuild drop every unread key — measured 14.10 KiB / 3.84 KiB gzipped against
+14.66 KiB / 4.13 KiB for minify alone, with zero occurrences of `publishConfig`,
+`keywords` or `git+https` left in the bundle. They also break Node, which is a
+supported consumer path for a published package that ships TypeScript source.
+All three forms tested against Node 22:
+
+| Form                                                       | Node                                        |
+| ---------------------------------------------------------- | ------------------------------------------- |
+| `import { name } from "./pkg.json"`                          | `ERR_IMPORT_ATTRIBUTE_MISSING`              |
+| `import { name } from "./pkg.json" with { type: "json" }`    | `SyntaxError: does not provide an export`   |
+| `import pkg from "./pkg.json" with { type: "json" }`         | works — the form the package uses           |
+
+A JSON module has only a default export, so named imports work solely in a
+bundler that synthesises them, and only with the attribute dropped. ~290 gzipped
+bytes on a script parsed once per isolate does not pay for narrowing who can
+consume the package. The reasoning is now a comment in
+`packages/ursprung/src/index.ts` so it is not re-litigated as a cleanup.
 
 ## 7. Observability samples everything at 100%
 
@@ -169,8 +185,10 @@ item 3 removes the noisiest source.
 upload: 15.08 KiB / 4.21 KiB.
 
 So this is honestly a simplification, not a performance win — esbuild only pulls
-in unenv polyfills when a builtin is actually imported. Worth removing because a
-flag that does nothing is a flag someone will later reason from incorrectly.
+in unenv polyfills when a builtin is actually imported.
+
+**Resolved: keep the flag.** It costs nothing measurable, and the framework this
+repo exists to build will want it.
 
 ## 9. The four checks are duplicated verbatim between the two workflows
 
@@ -181,6 +199,14 @@ check is added, and a publish silently skips a check if only one is updated.
 **Fix.** Extract them into a reusable workflow (`on: workflow_call`) that both
 call. The publish job should keep running them — a publish cannot be taken back —
 so this is deduplication, not removal.
+
+**Resolved: done.** The steps live in `.github/workflows/checks.yml`; `check.yml`
+and `publish.yml` each call it. One consequence worth knowing: a reusable workflow
+is a separate job, so `publish.yml` now pays checkout, `setup-bun` and
+`bun install` twice — once in `checks`, once in `publish`. That is 20–30 s added
+to a workflow that runs a handful of times a year, in exchange for the four
+checks having one definition. On `check.yml` nothing changes; it was already one
+job and still is.
 
 ## 10. `typecheck` runs `tsc` three times
 
