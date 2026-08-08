@@ -7,11 +7,11 @@ Map: [ursprung v0](../map.md)
 
 ## Question
 
-> **Premise changed 2026-08-07 — read the map's Pending amendments first.** This ticket
-> says "the server bundle", singular, throughout. Under the pending constraint 10
-> amendment there is no single server output: the server is a **root entrypoint plus one
-> module per Route**, and on both sides a module reachable from more than one entrypoint
-> is emitted once and shared rather than duplicated.
+> **Premise changed 2026-08-07, and the change has now landed.** Constraint 10 was
+> replaced and approved: there is no single server output. The server is a **root
+> entrypoint plus one module per Route**, and on both sides a module reachable from more
+> than one entrypoint is emitted once and shared rather than duplicated. This ticket says
+> "the server bundle", singular, throughout; read it as the server output as a whole.
 >
 > Three questions below change shape rather than disappearing. **"What is a node"** gets
 > easier — a module is emitted once, so the one-node-many-colours framing is closer to
@@ -22,7 +22,9 @@ Map: [ursprung v0](../map.md)
 > references, per ticket 07.
 >
 > The colouring invariant, the 3×3 matrix and the enforcement question are all unaffected.
-> If ticket 27 comes back negative, only the server half reverts.
+> One further input from ticket 11: `import { type A }` leaves a live `import {} from "x"`
+> edge, while `import type { A }` removes the edge entirely. Colouring must distinguish
+> the two, and ursprung has no type model with which to elide either.
 
 One unified graph, several outputs. The invariant that matters most in the whole
 framework lives here: **server code never reaches a client bundle**, while client code

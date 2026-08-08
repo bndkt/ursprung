@@ -8,8 +8,8 @@ Map: [ursprung v0](../map.md)
 ## Question
 
 A client component imports a function from a `.server.ts` and calls it like any other
-function. The bundler replaces it in the client bundle with a stub, keeps the real
-function in the server bundle, and exposes it over capnweb. Ticket 01 supplies capnweb's
+function. The bundler replaces it in the client output with a stub, keeps the real
+function in the server output, and exposes it over capnweb. Ticket 01 supplies capnweb's
 capability model; ticket 12 supplies the boundary edges in the graph. This ticket
 designs the transform.
 
@@ -44,7 +44,7 @@ Decide:
   it coexist with the API routes from ticket 08, and who generates it?
 - **Server-only imports that are not functions** — a `.server.ts` exporting a constant,
   imported by a client component. Error, or inlined value? Inlining is a data-leak vector.
-- **What the client bundle must not contain.** The stub must carry no trace of the server
+- **What the client output must not contain.** The stub must carry no trace of the server
   function's body, its imports, or its closed-over values. Name the check that proves it
   (see ticket 12's enforcement question).
 

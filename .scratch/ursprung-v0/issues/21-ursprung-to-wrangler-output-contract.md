@@ -7,6 +7,24 @@ Map: [ursprung v0](../map.md)
 
 ## Question
 
+> **Premise changed 2026-08-07 — constraint 10 was replaced and approved.** This ticket
+> says "the server bundle" and "each route's client bundle" as if each were one file.
+> Neither is. The server output is a **root entrypoint plus one module per Route** plus
+> whatever modules more than one entrypoint reaches; the client output is **one entry
+> module per Route** plus the same. Read every "bundle" below as a set of modules.
+>
+> Two of the questions below are affected. **Client bundle naming is no longer open**:
+> constraint 10 settles it as content-hashed **filenames**, and forbids the query-string
+> form outright, because workerd's registry keys on the resolved specifier and `?v=2`
+> mints a second instance of the same module. **The manifest question grows** — the
+> mapping is now Route to a set of modules, not Route to a file.
+>
+> And the amendment hands this ticket a new obligation it did not have: a module graph is
+> a **request waterfall** where a self-contained bundle was one request. ursprung controls
+> the HTML because it does Server rendering, so it can emit `<link rel="modulepreload">`
+> for exactly the modules a Route needs, in parallel with the document. **Design that
+> mitigation here; do not assume it.**
+
 ursprung owns building; Wrangler owns deploying. The boundary between them is a
 directory of files in a deterministic layout. Ticket 05 supplies what Wrangler's
 experimental TypeScript config actually supports; ticket 14 supplies what the bundles
