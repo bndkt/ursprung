@@ -55,6 +55,13 @@ The point where a client module imports from a server module. The bundler replac
 import with an RPC stub rather than including the code.
 _Avoid_: the network boundary, the RPC boundary
 
+**Stub module**:
+What a server module is emitted as on the client side of a Server boundary — a whole module
+carrying the server module's export names bound to RPC calls, not code spliced into the
+importer. So the importer's own body is identical on both sides, differing only in where its
+specifiers point.
+_Avoid_: shim, proxy, stub file
+
 **First-party module**:
 A module whose real path carries no `node_modules` segment — the application's own source,
 including a workspace member. It declares its Side.
@@ -107,7 +114,17 @@ position in the graph); vendor chunk
 **Emitted module**:
 Any module the build writes out, whatever its role. Filenames are content-hashed; a query
 string is never used to distinguish two of them, because the host's module registry keys
-on the resolved specifier and would treat `x.js?v=2` as a second instance.
+on the resolved specifier and would treat `x.js?v=2` as a second instance. The Root
+entrypoint is the one exception to the hashing, because Wrangler is configured with it by
+name and the build cannot rewrite the configuration to match.
+
+**Emission record**:
+What the build records about one Emitted module — its filename, its provenance, every
+specifier it wrote and where that resolved, and its content hash. It is what the
+post-emission audit reads instead of the graph, so that a wrong traversal cannot satisfy the
+audit by being wrong consistently, and it is the only thing that maps a flat emitted filename
+back to the module it came from.
+_Avoid_: manifest, build metadata
 
 There is deliberately **no collective noun** for everything the build emits for one side.
 Say "the server output" or "the client output" in prose. The words _server bundle_ and

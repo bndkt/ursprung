@@ -420,3 +420,21 @@ module**. Three consequences for this ticket's model, none of which contradict i
 "circular imports become legal" as a *proposed* amendment to constraint 10. The maintainer
 approved it and the sentence is struck from the constraint; read that decision as settled
 rather than pending.
+
+**2026-08-08, from [ticket 14](./14-emission-naming-and-specifier-rewriting.md) — the
+emission audit's provenance rule needs one refinement.** Decision 6's second layer requires
+that every emitted client module's provenance be a client, shared or third-party node. Ticket
+14 decided that an RPC stub **is** the client-side emission of the `.server.ts` node — same
+naming scheme, same directory, exporting the server module's export names — which is exactly
+what decision 1's `(node, side)` emission unit was reaching for. But it means a stub's
+provenance node is a **server** node, so the audit as written throws on every stub.
+
+Refined rather than weakened. An emitted client module is either printed from a
+client/shared/third-party/data node, **or** is a generated module whose emission record carries
+a `generated` kind (`root-entrypoint`, `route-table`, `route-entrypoint`, `rpc-stub`). For an
+`rpc-stub` the audit checks the stronger property instead: that no AST from the server node
+reached the printer at all. That is closer to what layer 2 was actually for — decision 6 notes
+that a server function body reaching the client through a mis-built stub is the one thing the
+audit cannot catch, and this narrows that gap without the byte-level re-parse it declined.
+
+Ticket 14 also fixes the emission-record shape decision 6 depends on; see its §12.

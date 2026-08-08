@@ -145,3 +145,24 @@ time.
 server. One dev-loop caveat recorded so it is not mistaken for a platform limit later:
 `@cloudflare/vitest-pool-workers` does not support `import()` inside `export default`
 handlers — that is a harness bug, not a runtime restriction, and v0 does not use it.
+
+## Comments
+
+**2026-08-08, from [ticket 28](./28-the-new-module-registry.md) — §3.2 quantified the
+request-CPU charge against the wrong plan tier.** This ticket weighed the new registry's
+request-CPU charging against *"a 30 s ceiling rather than a 1 s one"* and concluded the latency
+cliff was "a real shape but a small one". That holds on the **Paid** plan only. Cloudflare's
+limits page gives the **Free** plan **10 ms of request CPU per HTTP request** — a hundred times
+*smaller* than the 1 s startup budget the charge moves off. On Free, under
+`new_module_registry`, a Route's first request would pay that Route's compilation, its
+evaluation and its own rendering out of 10 ms, which inverts the conclusion for that tier.
+
+Nothing this ticket decided changes: v0 designs for the legacy registry either way, and the
+separate `enterDynamicImportJs` budget — whose size ursprung cannot learn — remains the safer
+place for the cost to land than a 10 ms budget whose size it knows exactly.
+
+**Also corrected: §6.2's query-string reasoning was right by luck.** It inferred instance
+behaviour from workerd's `queryAndFragment` test, which exports only constants and therefore
+proves nothing about module state. Ticket 28 established by execution that a query string mints a
+second instance with **duplicated live state** on the new registry, and that on the legacy
+registry it does not resolve at all (`No such module`). Conclusion unchanged, evidence now real.
