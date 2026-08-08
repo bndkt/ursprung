@@ -49,3 +49,21 @@ Decide:
 Strong candidate for `/prototype`: hand-write the HTML and payload for one trivial page
 and one interactive one, then hand-write the client code that resumes them. If that is
 hard to write by hand, it is the wrong format.
+
+## Input from ticket 22 — the falsifiable test is already decided
+
+[Ticket 22](./22-testing-strategy.md) §7 answers this ticket's last bullet, so do not re-decide
+it; inherit the harness and design the format against it.
+
+The check is the **Recording Host**: after resumption and one dispatched event, zero
+node-creation operations and exactly the property writes the interaction should cause. It is
+falsifiable in both directions — a re-render raises the creation count, an over-broad patch
+raises the operation count. It is sound only because ursprung has no virtual DOM and no
+diffing, so a component that re-executed would have to build a tree through the Host; a format
+that would break that property breaks the test with it.
+
+Two riders. Resumability fixtures **also** self-instrument — components increment a counter in
+a shared module — because the Host assertion infers "no component ran" from "no nodes created";
+a runtime test hook was rejected as production surface in the client hot path. And the browser
+layer asserts **node identity** instead, since it can see neither counter, which means the
+format must leave server-rendered nodes in place rather than replacing them.

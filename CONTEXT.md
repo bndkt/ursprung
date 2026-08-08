@@ -217,7 +217,30 @@ The implementation the renderer talks to in order to produce output — the DOM 
 browser, a string on the server, and a native UI layer later.
 _Avoid_: renderer, backend, platform
 
+**Recording Host**:
+A Host that records the operations it receives instead of producing output. It is an
+implementation of the Host interface alongside the DOM one and the server-string one, not a
+mock of one, and it is what makes Resumption assertable: a component that ran would have had
+to create nodes through it.
+_Avoid_: mock host, test host, spy
+
 **Intrinsic element**:
 An element ursprung knows natively, as opposed to a component. Explicitly enumerated
 rather than open-ended.
 _Avoid_: host element, tag, primitive
+
+### Testing
+
+**Fixture application**:
+A small application built by the test suite to exercise one behaviour. A valid one is a real
+directory read into a virtual filesystem snapshot; one whose point is a diagnostic is an inline
+source literal in the test that asserts it, so deliberately broken code never reaches the
+repo's typechecker or linter.
+_Avoid_: test app, sample app, example
+
+**Smuggling corpus**:
+The set of Fixture applications that each attempt one route by which server code could reach
+the client output. Every case asserts a specific diagnostic or emission shape, and asserts
+first that the boundary it attacks was actually in the graph — otherwise a fixture that quietly
+stops resolving turns the whole corpus green.
+_Avoid_: leak tests, security fixtures, adversarial suite

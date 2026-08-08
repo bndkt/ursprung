@@ -41,3 +41,21 @@ Decide:
   testing the renderer. If a third host is easy, the seam is real.
 
 `/codebase-design` is relevant: this is a deep-module question about where the seam goes.
+
+## Input from ticket 22 — the Recording Host is required, and its shape is constrained
+
+[Ticket 22](./22-testing-strategy.md) made this ticket's last bullet load-bearing rather than
+illustrative. The "trivial third host that records operations to an array" is now the
+**Recording Host** (`CONTEXT.md`), and it is where the client runtime is executed and where
+Resumption is asserted — so the seam is not merely proven real, it is depended on.
+
+Two consequences for the interface's shape:
+
+1. **Node creation and property writes must be separately observable.** Ticket 22 §7's
+   assertion is "zero node-creation operations after resumption, and *exactly* the property
+   writes the interaction should cause". An interface that folds both into one `patch`-shaped
+   operation makes the assertion unwritable.
+2. **The string host answers the ticket's own third bullet in the affirmative.** Ticket 22
+   treats DOM, server-string and Recording as three implementations of one interface. If the
+   string renderer turns out to need a separate path, ticket 22's client layering loses its
+   basis and this ticket must say so.

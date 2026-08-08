@@ -165,3 +165,17 @@ See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 5 and
 2. **External specifiers pass through untouched.** `node:*` and `cloudflare:*` are the only
    strings in the output that must survive specifier rewriting and content-hashing verbatim,
    and they are what the deployed Worker asks its host to resolve.
+
+## Input from ticket 22 — the deploy-shaped coverage CI declines
+
+[Ticket 22](./22-testing-strategy.md) §2 rules that the browser layer drives a **locally**
+served demo app rather than the deployed preview URL, because `check.yml` and Workers Builds
+are two CI systems with no handshake and Workers Builds does not build fork pull requests, so a
+gate depending on it fails open. The coverage that ruling gives up lands here: `noBundle`
+upload, asset routing, `runWorkerFirst` and the custom domain are exercised only by a
+per-release agent check against the preview URL, never by CI.
+
+That makes this ticket's output contract the place where those properties are stated precisely
+enough to be checked by hand — and it sharpens ticket 13's first rider rather than replacing
+it: if `nodejs_compat` is to be verified anywhere, nothing downstream of this ticket will catch
+it either.

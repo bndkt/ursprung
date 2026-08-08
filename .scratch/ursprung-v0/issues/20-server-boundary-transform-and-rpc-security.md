@@ -113,3 +113,20 @@ Also settled, and constraining:
   from a `.client.tsx` appears nowhere in it.
 
 See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 2, 3, 4 and 9.
+
+## Input from ticket 22 — the adversarial half of this ticket's security model
+
+[Ticket 22](./22-testing-strategy.md) §5 defines the **Smuggling corpus** (`CONTEXT.md`): one
+Fixture application per route by which server code could reach the client output, each
+asserting a specific diagnostic or emission shape rather than the absence of a string, and each
+first asserting — via ticket 12's materialised boundary-edge index — that the boundary it
+attacks was in the graph at all. Without that guard a fixture that quietly stops resolving
+turns the whole corpus green.
+
+The part that matters for the stub design: **ticket 22 pulled the lever ticket 12 left**.
+Ticket 12 declined a byte-level re-parse of emitted client output — the only check that catches
+a server function body reaching the client through a mis-built stub — because it costs a second
+full parse on every build. That cost is a build cost; in the test suite the assertion rides
+ticket 11's oracle-2 parse, which already happens. So a delicate stub design is caught by tests
+rather than only by review, and the corpus should grow a case for each way the transform in
+this ticket could go wrong.
