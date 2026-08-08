@@ -4,8 +4,6 @@ dist/
 # Generated from apps/web/src/styles.css by `bun run build:css`, which the dev
 # and deploy scripts run first.
 apps/web/public/styles.css
-# Written by the temporary ticket-23 probe in apps/web/scripts/. Goes away with it.
-apps/web/public/wb-probe.txt
 *.log
 .DS_Store
 .env

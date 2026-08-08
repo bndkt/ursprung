@@ -452,6 +452,20 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   implementation ticket**, because the assertion of record does not exist until the whole
   pipeline does. Recorded as
   [ADR-0011](../../docs/adr/0011-executed-output-is-the-assertion-of-record.md).
+- [Does Workers Builds honour `build.command`?](./issues/23-does-workers-builds-honour-build-command.md)
+  — **yes**, observed on a real branch build; the vision's deployment flow needs no
+  restructuring. Cloudflare's "Workers Builds does not honor Custom Builds" note is about
+  the platform's **own orchestration** not reading `[build]`; the Deploy command invokes
+  Wrangler inside the container, and Wrangler runs the command itself from `getEntry()` —
+  so ticket 05's two facts were never in conflict. Unconditional on the path `deploy` and
+  `versions upload` **share**, with no CI gate. The custom build runs **before the assets
+  are read**, so it can *generate* the assets directory — observed, not inferred, which is
+  exactly the shape ursprung's client output needs. Its cwd is `process.cwd()`, i.e. the
+  Root directory setting: note that `build.cwd` is the one `build` field Wrangler does
+  **not** normalise against the config file, unlike `watch_dir`. Ticket 21 inherits an
+  unforced choice (`build.command` versus the Deploy command) rather than a constraint,
+  plus the rider that the *server* half still needs `findAdditionalModules` under
+  `noBundle`.
 - [The erasable TypeScript subset](./issues/06-erasable-typescript-subset.md) — reject
   list is complete by construction (TS1294, six call sites) but **`erasableSyntaxOnly` is
   not sufficient**; delete list is 19 statement forms and 38 fragment positions;
