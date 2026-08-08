@@ -1,7 +1,7 @@
 # 21 — The ursprung → Wrangler output contract
 
 Type: grilling
-Status: open
+Status: claimed
 Blocked by: 14, 23, 27
 Map: [ursprung v0](../map.md)
 
