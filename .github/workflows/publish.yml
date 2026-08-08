@@ -9,8 +9,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The same four checks `check.yml` runs, from the same file. A publish cannot
+  # be taken back, only deprecated, so the full suite gates it — the pre-commit
+  # hook only ever sees staged files.
+  checks:
+    uses: ./.github/workflows/checks.yml
+
   publish:
     name: Publish to npm
+    needs: checks
     runs-on: ubuntu-latest
     # npm's trusted publisher for `ursprung` is bound to this repository, this
     # workflow file name and this environment. Renaming any of the three breaks
@@ -42,21 +49,6 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      # The pre-commit hook only ever sees staged files, so the full suite runs
-      # here before anything is pushed to the registry — a publish cannot be
-      # taken back, only deprecated.
-      - name: Check formatting
-        run: bun run fmt:check
-
-      - name: Lint
-        run: bun run lint
-
-      - name: Typecheck
-        run: bun run typecheck
-
-      - name: Test
-        run: bun test
 
       # The release tag is what a reader of the provenance attestation sees, so
       # it has to agree with the version actually going to the registry.
