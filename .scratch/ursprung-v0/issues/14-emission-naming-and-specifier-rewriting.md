@@ -282,8 +282,16 @@ importer's URL. Both land in the same directory.
   emitted module, so moving the output directory would mean re-emitting the whole graph.
   Relative survives the move, which keeps ticket 21 free to place the directory.
 - **Never a query string.** Ticket 27's obligation, restated here because this is the code
-  that would violate it. The legacy registry does not strip one, so `./x.js?v=2` mints a second
-  module instance, two reactive graphs and ticket 02's silent cross-copy freeze.
+  that would violate it. **Corrected 2026-08-08 by
+  [research §28](../research/28-new-module-registry.md), which established the two registries
+  fail differently and this bullet had conflated them.** On the legacy registry `./x.js?v=2`
+  does not resolve at all — `kj::Path` has no notion of a query, and the import throws
+  `No such module "x.js?v=2".` On the new registry it resolves to the same *definition* but a
+  distinct *instantiation*: a second `v8::Module`, a second evaluation, and a second copy of
+  live module state persisting across requests — which is ticket 02's silent cross-copy freeze
+  arriving through the emitter. So the hazard this rule guards against is **silent only on the
+  new registry**, and the rule is satisfied by construction here, since ADR-0010 hashes into
+  the filename and §6 emits `./<filename>` and nothing else.
 - **`node:*` and `cloudflare:*` survive verbatim** — ticket 13, the only specifiers the
   emitter must not rewrite.
 
@@ -320,7 +328,16 @@ behind `new_module_registry`, which is `$experimental` with **no `$compatEnableD
 appears nowhere on Cloudflare's public compatibility-flags page. The registries differ here —
 legacy drains the microtask queue once and throws `"Top-level await in module is unsettled."`,
 the new one returns the real promise — but **the rule is valid under both**, because the new
-registry is strictly more permissive. Nothing changes if the flag ever ships.
+registry is strictly more permissive.
+
+**Sharpened 2026-08-08 by [research §28](../research/28-new-module-registry.md).** This
+originally read "nothing changes if the flag ever ships", which was too generous. Measured
+against both registries, an unsettleable top-level await **rejects** on legacy and **stays
+pending forever** on the new one — so for a Route entrypoint the router awaits, "strictly more
+permissive" is in practice "hangs instead of failing", killed later by hang detection with no
+message naming the module. If the flag ships this rule therefore **matters more, not less**: the
+build error becomes the only legible report of the problem. The decision is unchanged; only its
+reason.
 
 Targeting the new registry outright was proposed, in the spirit of preferring modern platform
 capabilities over reach, and rejected on three grounds:

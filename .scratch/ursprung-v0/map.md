@@ -378,6 +378,21 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   included; **`nodejs_compat` is assumed and unverifiable from the build**, an accepted cost
   handed to ticket 21. Two caches with different lifetimes: resolution results are keyed on
   Side and die between passes, manifest reads do not.
+- [workerd's new module registry: status, semantics, and what it would mean for ursprung](./issues/28-the-new-module-registry.md)
+  — the ticket 14 §8 ruling **holds, and two of its three grounds got stronger**. Undeployability
+  is now established rather than inferred: workerd's own annotation says `$experimental` flags
+  "cannot be used in Workers deployed on Cloudflare", and enforces it — while **neither
+  `wrangler dev` nor `deploy --dry-run` warns**, so the failure arrives only at a real deploy.
+  The flag is unchanged (`$experimental`, no enable date) but visibly being prepared — an
+  `nmr-ga-review` branch, "ahead of NMR enablement". Much of this is **executed** evidence, and
+  it corrected three stated reasons without moving a decision: a query string **throws** on
+  legacy and **duplicates live module state** on the new registry (ticket 14 §6 had conflated
+  them); unsettleable top-level await degrades from a **throw to a hang**, so ticket 14 §8's rule
+  matters *more* if the flag ships; and ticket 27's 30 s request-CPU figure is Paid-plan only —
+  **Free is 10 ms**, a hundred times smaller than the startup budget the charge moves off. The
+  one real prize is **lazy compilation**, which would make constraint 10's closing sentence false
+  and let Route-splitting keep startup flat. Revisit trigger is one line:
+  `newModuleRegistry` gaining a `$compatEnableDate`.
 - [Emission: module naming, specifier rewriting, and what the printer writes](./issues/14-emission-naming-and-specifier-rewriting.md)
   — one **flat directory per side**, `<basename>-<hash>.js`, specifiers always relative and
   never a query string. The hash is **transitive over the condensation graph**, because legal
