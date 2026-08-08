@@ -126,3 +126,20 @@ See [ticket 12](./12-module-graph-and-two-colour-derivation.md), decisions 1, 6,
    is now a `.js` file, and asserting `json` on one is a hard error in both hosts.
 2. **External specifiers survive rewriting verbatim.** `node:*` and `cloudflare:*` are the
    only specifiers the emitter must not rewrite or content-hash.
+
+## Input from the maintainer, 2026-08-08 — the printer records positions
+
+Source maps stay out of scope for v0 and unmappable production stack traces are accepted.
+**The obligation this ticket carries is the other half of that ruling: the printer records a
+position per printed node.** No `.map` files are emitted and nothing in the output changes —
+this is purely so that emitting them later is additive.
+
+The reason it is an obligation rather than a good intention: a printer written without
+position tracking is retrofitted by touching every print site. That retrofit is what gets
+more expensive with delay, not the map files, and it is the whole reason the decision was
+worth making now rather than when someone first needs a stack trace.
+
+Cheapest discharge is probably for the printer to thread an output offset alongside the
+buffer it appends to, so that a node's `(original span, output offset)` pair falls out of
+printing rather than being computed afterwards — but the shape is this ticket's to choose.
+What is fixed is that the information must exist and must be testable.

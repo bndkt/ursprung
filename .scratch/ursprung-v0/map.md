@@ -225,8 +225,12 @@ distinction is worth spelling out because it is what keeps the approval cheap: a
 test-only dev dependency cannot reach a consumer, so the "three dependencies" promise that
 matters — what someone installing `ursprung` gets — is unchanged.
 
-**Proposed 2026-08-07 — source maps should be reconsidered, because the reason they were
-ruled out was never true.** Raised by ticket 11. Out of scope lists them beside minification
+**Landed 2026-08-08 — source maps stay out of scope, but the reason was wrong and the
+emitter carries an obligation.** Raised by ticket 11 and ruled by the maintainer: v0 accepts
+unmappable production stack traces, and **ticket 14 must record a position per printed node
+anyway**, so maps stay additive later rather than a retrofit through every print site. The
+retrofit is what gets more expensive with delay; the map files do not. Out of scope lists
+them beside minification
 and identifier renaming, all three "needing the scope model constraint 8 rules out".
 Minification and renaming do. **Source maps never did** — they need position tracking
 through the emitter, which is a mapping recorded per printed node.
@@ -241,10 +245,13 @@ Two things changed at once, and the combination is what makes this worth your at
   Build diagnostics are fine and always were — they are computed against the original module
   text. This is purely about runtime errors in deployed code.
 
-Deliberately **not** ruled either way here, because scope is the maintainer's. Three readings
-are all defensible: accept unmappable production traces in v0; emit source maps for the
-server output only, where the trace actually arrives; or reverse ticket 11's printer decision
-in favour of the edit list, which is the option that gets more expensive the longer it waits.
+Two alternatives were weighed and rejected. **Server-output-only maps** — cheapest to build
+while the emitter is being designed, and where the trace actually arrives — buy a demo app
+nothing it needs, and leave client errors in a resumed page unmappable anyway. **Reversing
+the printer decision** in favour of the edit list was taken off the table when that decision
+was re-verified the same day (see ticket 11's comments): it would give back three constructs
+ursprung accepts and both reference implementations do not, adopt a bug those
+implementations still carry, and split code emission into two mechanisms.
 
 Previously: constraints 8 and 15 were both amended on 2026-08-07, from findings in
 [the erasable TypeScript subset](./issues/06-erasable-typescript-subset.md),
@@ -437,8 +444,9 @@ Ruled beyond this destination. Never graduates; returns only as a fresh effort.
   out. **Source maps were on this line for the same reason, and that reason was wrong** —
   they need position tracking through the emitter, not a scope model, and
   [ticket 11](./issues/11-parser-subset-ast-and-errors.md) made them the only way to map a
-  production stack trace. Still out of scope; see Pending amendments for the proposal to
-  revisit.
+  production stack trace. **Still out of scope, ruled 2026-08-08** — but with an obligation
+  attached rather than a door closed: the emitter records a position per printed node, so
+  adding maps later is additive. See Pending amendments.
 - **Stylesheets and a general asset pipeline.** Explicitly out per the vision.
 - **The build-in-a-Worker product** — an agent driving a dynamic Worker, writing to R2,
   serving from a dispatch namespace. The constraint is in scope; the product is not.
