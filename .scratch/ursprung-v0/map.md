@@ -102,22 +102,19 @@ Where a resolved ticket shows a locked constraint to be wrong, it is proposed he
 than edited in — the constraints are the maintainer's. Approved amendments are folded
 into the list above and struck from this section.
 
-**Proposed 2026-08-08 — constraint 17's `{ vfs, config }` is now too narrow by one field.**
-Raised by ticket 21, awaiting the maintainer. The build receives the host-evaluated
-`cloudflare.config.ts` and `wrangler.config.ts` **in addition to** `ursprung.config.ts`, so it
-can check the nine agreements in ticket 21 §2 — `noBundle`, the entrypoint path, `baseDir`, the
-ESModule rule, the assets directory, `notFoundHandling`, `nodejs_compat`, the shared
-`compatibilityDate`, and `build.command`.
+**Withdrawn 2026-08-08 before it was ruled on — constraint 17 needs no amendment.** Ticket 21
+proposed widening `{ vfs, config }` to carry the host-evaluated `cloudflare.config.ts` and
+`wrangler.config.ts`, so the build could check its nine configuration agreements. The maintainer
+asked why the build receives the Wrangler configuration at all. It does not need to: five of the
+nine agreements are computable from the Wrangler configs alone, and the other four from those
+plus `outDir` and `compatibilityDate` — **none needs the graph or the emitted output**, so the
+**Build host** checks them all before it calls `build`.
 
-**The principle is unchanged and arguably reinforced** — the host evaluates, the build evaluates
-nothing, and the extra field arrives as plain data at the same boundary by the same mechanism.
-Only the arity changes, which is why this is proposed as a widening rather than a replacement.
-
-What it does change is **ticket 08's stance that ursprung does not know Wrangler exists**, and
-the reversal should be read as narrow: the Wrangler configs are an input to *validation*, never
-to compilation. Nothing downstream of the check reads them, and the build still produces
-identical output if they are absent — which is also why `compatibilityDate` stays duplicated on
-`ursprung.config.ts` rather than being read from `cloudflare.config.ts`.
+Kept here only as a caution, since the constraint list is unchanged. The original error was not
+a wrong decision but a **misplaced** one: "who checks this?" was never asked, the check landed
+inside the build by default, and an amendment was then invented to make room for it. Constraint
+17 stands as written, and ticket 08's stance that ursprung does not know Wrangler exists survives
+whole rather than being narrowly reversed.
 
 **Landed 2026-08-07 — constraint 10 replaced: ursprung emits a module graph, not bundles.**
 Approved by the maintainer and folded in above, with ticket 27's two corrections written
@@ -488,9 +485,10 @@ as [ADR-0004](../../docs/adr/0004-no-polyfills-workerd-natives-only.md).
   entrypoint `index.js`; `client/` **is** the assets directory), so ursprung also **copies the
   author's static files** — the price of that layout, and it does not close the static-assets
   fog. **Wrangler drives ursprung** via `build.command`, chosen so ursprung stays as invisible
-  as possible, and ursprung **validates nine agreements** rather than writing any config: the
-  host hands the build the evaluated Wrangler configs, narrowly reversing ticket 08's
-  Wrangler-ignorance so ursprung can *complain* and nothing more. Two handed-down inputs fell:
+  as possible, and the **Build host validates nine agreements** rather than ursprung writing any
+  config — checked before `build` is called, because none of them needs the graph or the emitted
+  output, so constraint 17 is untouched and ticket 08's Wrangler-ignorance survives whole. Two
+  handed-down inputs fell:
   **`runWorkerFirst` is not required** — ticket 05's finding was conditional, default routing
   already sends asset hits to the store and misses to the Worker, and `true` would 404 every
   module for want of an `ASSETS` binding — so the contract pins `notFoundHandling: "none"`

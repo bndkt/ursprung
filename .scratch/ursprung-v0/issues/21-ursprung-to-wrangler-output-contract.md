@@ -226,7 +226,7 @@ a job that has nothing to do with compilation.
 
 ### 2. What Wrangler must be configured with
 
-Nine agreements, all of them checked (§3):
+Nine agreements, all of them checked by the Build host rather than by the build (§3):
 
 | Setting | Required value | Where |
 | --- | --- | --- |
@@ -258,9 +258,8 @@ Worker runs at `cloudflare.config.ts`'s. If they diverge, the build computes the
 externals set for a **different runtime than the one that will execute** — the failure is a
 Worker that fails at startup on a specifier the build approved. Collapsing the duplication by
 having ursprung read the date from `cloudflare.config.ts` was considered and rejected: the build
-must still work when it has only its own config, because the Wrangler configs are an input to
-**validation**, not to compilation (§3). So the date stays on `ursprung.config.ts` and the two
-are asserted equal.
+never sees the Wrangler configs at all (§3), so its own config must carry every value it
+compiles against. So the date stays on `ursprung.config.ts`, and the host asserts the two equal.
 
 ### 3. Wrangler drives ursprung — and the generated-configuration route is closed
 
@@ -269,16 +268,37 @@ plain `wrangler deploy`. **The maintainer's reason was that ursprung should be a
 possible** — a line in a config rather than a step in a pipeline. Ticket 23 established this
 path runs under Workers Builds.
 
-ursprung does not write the Wrangler configuration. Instead, per constraint 17's existing
-mechanism, **the host evaluates `cloudflare.config.ts` and `wrangler.config.ts` and hands the
-build plain data** alongside `ursprung.config.ts`. The build evaluates nothing, touches no Node
-API and stays pure; it checks §2's nine agreements and reports failures as ordinary batched
-diagnostics with a `remedy`, exactly like every other build error.
+ursprung does not write the Wrangler configuration. It checks it — and **the check belongs to
+the Build host, not to the build.** The host evaluates `cloudflare.config.ts` and
+`wrangler.config.ts`, and it already holds `outDir` and the `compatibilityDate` from
+`ursprung.config.ts`, so it can compare §2's nine agreements **before it calls `build` at all**.
 
-**This reverses ticket 08's deliberate stance that ursprung does not know Wrangler exists.** The
-reversal is narrow and worth naming: ursprung knows Wrangler exists in order to *complain*, and
-in no other way. Compilation never reads these configs, which is what keeps the build's real
-input `{ vfs, config }`.
+**This was originally specified as a check inside the build, and that was wrong.** The test that
+settles it is which inputs each agreement needs. Five — `noBundle`, `rules`, `notFoundHandling`,
+`compatibilityFlags`, `build.command` — need only the Wrangler configs. The other four —
+`entrypoint`, `baseDir`, `assetsDirectory`, `compatibilityDate` — need the Wrangler configs plus
+two scalars from `ursprung.config.ts`. **None needs the graph, the emitted modules, or anything
+else the build computes**, so passing the Wrangler configs into the build bought nothing and
+widened its input for no reason.
+
+So **constraint 17 is untouched**: the build's input stays exactly `{ vfs, config }`. And
+**ticket 08's stance that ursprung does not know Wrangler exists survives intact** rather than
+being narrowly reversed — it is the *host* that knows, which it must anyway, because it is the
+thing Wrangler invokes. This also agrees with constraint 4: Wrangler-shaped knowledge and Node
+APIs both live on the host side of that line.
+
+**One check does need build output, and it runs on the other side of the build.** Whether the
+author's `rules` globs actually match the emitted server filenames — as opposed to merely
+containing a plausible-looking pattern — is only answerable once the filenames exist. The host
+answers it from the Emission records the build already returns (ticket 14 §12). So the host
+checks the configuration before the build and the coverage after it, and the build itself
+carries neither.
+
+**The cost is a diagnostics seam**, and it is payable. Ticket 10 has `build` return every
+diagnostic in one batch, because agents are first-class users; a host-side check reports outside
+that batch. Ticket 11 fixed the `Diagnostic` shape with a required `remedy`, so the host emits
+the same shape and prints both together. That is a merge at the point of reporting, not a second
+channel for a reader to discover.
 
 **The generated-configuration mechanism was investigated and is not available.** Cloudflare
 documents `.wrangler/deploy/config.json`, a redirect that points Wrangler at a build-generated
@@ -449,10 +469,12 @@ still slip through, and the per-release check against the preview URL stays the 
 exercises it.
 
 This also discharges ticket 13's first rider as far as it can be discharged. `nodejs_compat` is
-now a checked agreement (§2), so an application omitting the flag fails at **build time** rather
-than at Worker startup — but only because the host hands over the evaluated `cloudflare.config.ts`.
-The check is a diagnostic about a file ursprung does not own, and an author deploying by some
-other route still gets the startup failure.
+now a checked agreement (§2), so an application omitting the flag fails **before the build runs**
+rather than at Worker startup. Note where the check sits: ticket 13 said "the Wrangler-facing
+output contract is the one place this could actually be verified", and that turns out to be the
+Build host rather than the build — which is why it costs constraint 17 nothing. The check is
+still a diagnostic about a file ursprung does not own, and an author who deploys by some other
+route gets the startup failure as before.
 
 ### Consequences and riders
 
@@ -488,3 +510,22 @@ and the maintainer then identified independently that it would also cost `build.
 three reasons in §3 are the write-up of that exchange. Both halves are worth keeping, because
 the incompatibility is undocumented and the next session to have this idea will otherwise
 re-derive it from scratch.
+
+**2026-08-08 — §3 corrected: the configuration check moved from the build to the Build host.**
+As first written, §3 had the host pass the evaluated Wrangler configs *into* the build, and
+proposed widening constraint 17 to carry them. The maintainer asked why the build receives the
+Wrangler configuration. It does not need to, and the answer took one test: enumerate the inputs
+each of §2's nine agreements needs. Five need only the Wrangler configs; four need those plus
+`outDir` and `compatibilityDate` from `ursprung.config.ts`. **None needs the graph or the
+emitted output**, so every one of them is computable before `build` is called.
+
+The correction is strictly a simplification, which is the sign it is right: constraint 17 stands
+unchanged, the proposed amendment is withdrawn, and ticket 08's Wrangler-ignorance survives
+whole instead of being "narrowly reversed". The only thing given up is that the configuration
+diagnostics no longer arrive in ticket 10's single batch — payable, because ticket 11 fixed the
+`Diagnostic` shape and the host can print both sets together.
+
+Worth keeping as a pattern: the original error was not a wrong decision but a **misplaced** one.
+"Who checks this?" was never asked, so the check landed in the build by default, and the
+constraint amendment was invented to make room for it. An amendment proposed to accommodate a
+detail nobody argued for is worth re-reading before it is sent.
